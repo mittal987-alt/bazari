@@ -54,11 +54,11 @@ export default function NearbyPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#FDFDFD] text-slate-900">
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
       <div className="max-w-[1400px] mx-auto px-6 py-10">
 
         {/* HEADER */}
-        <div className="bg-white p-6 rounded-2xl border-2 border-black mb-8 shadow">
+        <div className="bg-card p-6 rounded-2xl border border-border mb-8 shadow-sm">
           <div className="flex flex-col md:flex-row justify-between gap-4">
 
             <div>
@@ -66,9 +66,9 @@ export default function NearbyPage() {
                 <FiNavigation /> Nearby Ads
               </h1>
 
-              <p className="text-sm mt-2 text-gray-500">
+              <p className="text-sm mt-2 text-muted-foreground">
                 {coords ? (
-                  <span className="text-green-600 font-semibold flex items-center gap-2">
+                  <span className="text-emerald-500 font-semibold flex items-center gap-2">
                     <PulseDot /> Using your GPS location
                   </span>
                 ) : loadingLocation ? (
@@ -81,13 +81,13 @@ export default function NearbyPage() {
 
             {/* SEARCH */}
             <div className="relative w-full md:max-w-sm">
-              <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="text"
                 placeholder="Search nearby..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-10 pr-10 py-3 border-2 border-black rounded-xl"
+                className="w-full pl-11 pr-10 py-3 bg-muted/50 border border-border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none transition-all"
               />
               {search && (
                 <button
@@ -108,10 +108,10 @@ export default function NearbyPage() {
             <button
               key={cat.id}
               onClick={() => setCategory(cat.id)}
-              className={`px-4 py-2 rounded-full border-2 ${
+              className={`px-4 py-2 rounded-full border transition-all duration-300 ${
                 category === cat.id
-                  ? "bg-black text-white"
-                  : "bg-white text-gray-600"
+                  ? "bg-primary text-primary-foreground border-primary shadow-md"
+                  : "bg-card text-muted-foreground border-border hover:bg-accent"
               }`}
             >
               {cat.emoji} {cat.label}

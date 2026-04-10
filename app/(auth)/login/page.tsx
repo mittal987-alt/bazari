@@ -66,11 +66,11 @@ export default function LoginPage() {
       flex 
       items-center 
       justify-center 
-      bg-gradient-to-br 
-      from-[#0f172a] 
-      via-[#1e293b] 
-      to-black
+      bg-background
+      transition-colors
+      duration-500
     ">
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5 -z-10" />
       <motion.div
         initial={{ opacity: 0, y: 40, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -78,18 +78,18 @@ export default function LoginPage() {
           className="
                  w-full max-w-md 
                  p-8 rounded-2xl 
-                 bg-white/10 
-                 backdrop-blur-md 
-                 border border-white/20
-                 shadow-xl
+                 bg-card/50
+                 backdrop-blur-xl 
+                 border border-border
+                 shadow-2xl
                " >
 
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-extrabold text-white">
-            Welcome Back
+          <h1 className="text-4xl font-extrabold text-foreground tracking-tighter uppercase italic">
+            Bazaari
           </h1>
-          <p className="text-gray-400 mt-2 text-sm">
+          <p className="text-muted-foreground mt-2 text-sm font-medium">
             Login to your marketplace account
           </p>
         </div>
@@ -105,12 +105,11 @@ export default function LoginPage() {
           </motion.p>
         )}
 
-        {/* Inputs */}
         <div className="space-y-4">
           <Input
             type="email"
             placeholder="Email address"
-            className="bg-white/90 focus:ring-2 focus:ring-blue-500"
+            className="bg-background/50 border-border focus:ring-2 focus:ring-primary/20"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
@@ -118,7 +117,7 @@ export default function LoginPage() {
           <Input
             type="password"
             placeholder="Password"
-            className="bg-white/90 focus:ring-2 focus:ring-blue-500"
+            className="bg-background/50 border-border focus:ring-2 focus:ring-primary/20"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
@@ -128,25 +127,24 @@ export default function LoginPage() {
         <Button
           onClick={handleLogin}
           disabled={loading}
-          className="w-full mt-6 bg-white text-black hover:bg-gray-200 shadow-lg hover:shadow-white/20 transition-all duration-300"
+          className="w-full mt-6 bg-primary text-primary-foreground hover:bg-primary/90 shadow-xl transition-all duration-300 rounded-xl py-6 font-bold uppercase tracking-widest text-xs"
         >
           {loading ? "Logging in..." : "Login"}
         </Button>
 
-        {/* Footer */}
-        <div className="mt-6 border-t border-white/10 pt-4 text-center space-y-2">
+        <div className="mt-8 border-t border-border/50 pt-6 text-center space-y-3">
           <Link
             href="/forgot-password"
-            className="text-sm text-gray-400 hover:text-white transition"
+            className="text-sm text-muted-foreground hover:text-foreground transition font-medium"
           >
             Forgot password?
           </Link>
 
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-muted-foreground">
             Don’t have an account?{" "}
             <Link
               href="/register"
-              className="text-white font-medium hover:underline"
+              className="text-foreground font-bold hover:underline"
             >
               Register
             </Link>

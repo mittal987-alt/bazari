@@ -80,8 +80,8 @@ export default function Navbar() {
       className={clsx(
         "sticky top-0 z-[100] transition-all duration-500 w-full px-8 py-4",
         scrolled 
-          ? "bg-[#020617]/85 backdrop-blur-xl border-b border-white/20 shadow-2xl" 
-          : "bg-[#020617]/90 backdrop-blur-md border-b border-white/5"
+          ? "bg-background/85 backdrop-blur-xl border-b border-border shadow-2xl" 
+          : "bg-background/90 backdrop-blur-md border-b border-border/50"
       )}
     >
       <div className="max-w-[1700px] mx-auto flex items-center justify-between gap-10">
@@ -91,7 +91,7 @@ export default function Navbar() {
           <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-black italic shadow-[0_0_20px_rgba(37,99,235,0.3)] transition-all group-hover:scale-110">
             B
           </div>
-          <span className="hidden md:block text-2xl font-black tracking-tighter uppercase text-white">
+          <span className="hidden md:block text-2xl font-black tracking-tighter uppercase text-foreground">
             Bazaari
           </span>
         </Link>
@@ -99,14 +99,14 @@ export default function Navbar() {
         {/* --- REFINED SEARCH BAR --- */}
         <form
           onSubmit={(e) => { e.preventDefault(); router.push(`/nearby?search=${search}`); }}
-          className="hidden lg:flex flex-1 max-w-lg items-center relative bg-white/5 border border-white/10 rounded-2xl px-5 py-2.5 transition-all focus-within:border-blue-500 focus-within:bg-white/10"
+          className="hidden lg:flex flex-1 max-w-lg items-center relative bg-muted/30 border border-input rounded-2xl px-5 py-2.5 transition-all focus-within:border-blue-500 focus-within:bg-muted/50"
         >
-          <FiSearch className="text-slate-400 group-focus-within:text-blue-400" size={18} />
+          <FiSearch className="text-muted-foreground group-focus-within:text-blue-400" size={18} />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search the marketplace..."
-            className="bg-transparent outline-none text-sm w-full ml-3 pr-16 text-white placeholder-slate-500 font-medium"
+            className="bg-transparent outline-none text-sm w-full ml-3 pr-16 text-foreground placeholder-muted-foreground font-medium"
           />
           <input 
              type="file" 
@@ -124,7 +124,7 @@ export default function Navbar() {
           >
              {isAnalyzing ? <FiLoader size={18} className="animate-spin" /> : <FiCamera size={18} />}
           </button>
-          <kbd className="hidden xl:block absolute right-3 text-[10px] font-black text-slate-500 bg-white/5 px-2 py-1 rounded">⌘ K</kbd>
+          <kbd className="hidden xl:block absolute right-3 text-[10px] font-black text-muted-foreground bg-muted px-2 py-1 rounded">⌘ K</kbd>
         </form>
 
         {/* --- NAVIGATION --- */}
@@ -137,13 +137,13 @@ export default function Navbar() {
                 href={item.href}
                 className={clsx(
                   "relative px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300",
-                  active ? "text-white" : "text-white/40 hover:text-white hover:bg-white/5"
+                  active ? "text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 )}
               >
                 {active && (
                   <motion.div 
                     layoutId="navbar-pill"
-                    className="absolute inset-0 bg-white/10 border border-white/10 rounded-xl"
+                    className="absolute inset-0 bg-muted border border-border rounded-xl"
                   />
                 )}
                 <span className="relative z-10 flex items-center gap-2">
@@ -171,19 +171,19 @@ export default function Navbar() {
                 </Link>
                 <button 
                   onClick={() => api.post("/auth/logout").then(clearUser)}
-                  className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-rose-500 hover:bg-rose-500 hover:text-white transition-all"
+                  className="p-2.5 rounded-xl bg-muted border border-border text-rose-500 hover:bg-rose-500 hover:text-white transition-all shadow-sm"
                 >
                   <FiLogOut size={18} />
                 </button>
               </>
             ) : (
-              <Link href="/login" className="bg-white text-black px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all">
+              <Link href="/login" className="bg-foreground text-background px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all">
                 Join
               </Link>
             )}
           </div>
 
-          <button onClick={() => setMobileOpen(!mobileOpen)} className="xl:hidden text-white p-2">
+          <button onClick={() => setMobileOpen(!mobileOpen)} className="xl:hidden text-foreground p-2">
             {mobileOpen ? <FiX size={24} /> : <FiMenu size={24} />}
           </button>
         </div>
@@ -196,10 +196,10 @@ export default function Navbar() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="xl:hidden mt-4 rounded-3xl bg-[#070e20] border border-white/10 p-6 space-y-4"
+            className="xl:hidden mt-4 rounded-3xl bg-card border border-border p-6 space-y-4 shadow-xl"
           >
             {navItems.map((item) => (
-              <Link key={item.href} href={item.href} className="flex items-center gap-4 text-white/70 font-black text-xs uppercase tracking-widest p-2">
+              <Link key={item.href} href={item.href} className="flex items-center gap-4 text-muted-foreground hover:text-foreground font-black text-xs uppercase tracking-widest p-2 transition-colors">
                 <DynamicIcon iconName={item.icon} /> {item.title}
               </Link>
             ))}

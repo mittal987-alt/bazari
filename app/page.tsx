@@ -25,18 +25,18 @@ export default function HomePage() {
   if (!authChecked) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-black text-white">
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-500">
 
       {/* HERO */}
       <section className="max-w-7xl mx-auto px-6 py-24 text-center">
         <h1 className="text-4xl md:text-6xl font-extrabold leading-tight">
           Buy & Sell Anything
-          <span className="block text-blue-500 mt-2">
+          <span className="block text-primary mt-2">
             Near You
           </span>
         </h1>
 
-        <p className="mt-6 text-lg text-gray-300 max-w-2xl mx-auto">
+        <p className="mt-6 text-lg text-muted-foreground max-w-2xl mx-auto">
           A trusted marketplace where buyers and sellers meet.
           Post ads, discover great deals, and connect instantly.
         </p>
@@ -44,14 +44,14 @@ export default function HomePage() {
         <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
           <Link
             href="/register"
-            className="px-8 py-3 rounded-full bg-blue-600 hover:bg-blue-700 transition text-white font-semibold"
+            className="px-8 py-3 rounded-full bg-primary hover:bg-primary/90 transition text-primary-foreground font-semibold shadow-lg"
           >
             Get Started Free
           </Link>
 
           <Link
             href="/login"
-            className="px-8 py-3 rounded-full border border-white/30 hover:bg-white/10 transition font-semibold"
+            className="px-8 py-3 rounded-full border border-border hover:bg-muted transition font-semibold"
           >
             I Already Have an Account
           </Link>
@@ -59,7 +59,7 @@ export default function HomePage() {
       </section>
 
       {/* FEATURES */}
-      <section className="bg-black/40 py-20">
+      <section className="bg-muted/30 py-20 border-y border-border">
         <div className="max-w-7xl mx-auto px-6 grid gap-8 md:grid-cols-3">
 
           <FeatureCard
@@ -98,8 +98,8 @@ export default function HomePage() {
       </section>
 
       {/* FOOTER */}
-      <footer className="border-t border-white/10 py-6 text-center text-sm text-gray-400">
-        © {new Date().getFullYear()} OLX Clone. All rights reserved.
+      <footer className="border-t border-border py-12 text-center text-sm text-muted-foreground bg-muted/20">
+        © {new Date().getFullYear()} Bazaari. All rights reserved.
       </footer>
     </div>
   );
@@ -115,10 +115,10 @@ function FeatureCard({
   desc: string;
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 p-6 bg-white/5 backdrop-blur hover:bg-white/10 transition">
-      <div className="text-4xl">{icon}</div>
-      <h3 className="mt-4 text-xl font-semibold">{title}</h3>
-      <p className="mt-2 text-gray-300 text-sm">{desc}</p>
+    <div className="rounded-2xl border border-border p-6 bg-card shadow-sm hover:shadow-md hover:bg-accent/10 transition-all duration-300">
+      <div className="text-4xl mb-4">{icon}</div>
+      <h3 className="text-xl font-bold text-foreground">{title}</h3>
+      <p className="mt-2 text-muted-foreground text-sm leading-relaxed">{desc}</p>
     </div>
   );
 }

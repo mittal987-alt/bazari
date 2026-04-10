@@ -8,7 +8,7 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="relative mt-32 w-full bg-[#050a15] dark:bg-[#010309] text-white overflow-hidden">
+    <footer className="relative mt-32 w-auto bg-muted/30 border-t border-border text-foreground overflow-hidden transition-colors duration-500">
       
       {/* 🔮 TOP GLOW & DIVIDER */}
       <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-blue-500/40 to-transparent" />
@@ -21,19 +21,19 @@ export default function Footer() {
           {/* BRANDING COLUMN */}
           <div className="lg:col-span-4 space-y-8">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white font-black text-2xl italic shadow-[0_0_30px_rgba(37,99,235,0.3)]">
+              <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-primary-foreground font-black text-2xl italic shadow-[0_0_30px_rgba(37,99,235,0.3)] dark:shadow-[0_0_30px_rgba(59,130,246,0.2)]">
                 B
               </div>
-              <span className="text-3xl font-black tracking-tighter uppercase">Bazaari</span>
+              <span className="text-3xl font-black tracking-tighter uppercase text-foreground">Bazaari</span>
             </div>
             
-            <p className="text-slate-400 font-medium leading-relaxed max-w-sm text-lg">
+            <p className="text-muted-foreground font-medium leading-relaxed max-w-sm text-lg">
               The premier destination for high-end marketplace discovery. Secure, verified, and built for the modern collector.
             </p>
 
             <div className="flex gap-4">
               {[FaGithub, FaTwitter, FaInstagram, FaLinkedin].map((Icon, i) => (
-                <button key={i} className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all duration-500 shadow-xl">
+                <button key={i} className="w-12 h-12 rounded-2xl bg-card border border-border flex items-center justify-center text-muted-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-500 shadow-xl">
                   <Icon size={20} />
                 </button>
               ))}
@@ -95,15 +95,15 @@ export default function Footer() {
         </div>
 
         {/* COPYRIGHT AREA */}
-        <div className="pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-8">
-          <p className="text-sm font-bold text-slate-500">
-            © {currentYear} <span className="text-white">Bazaari Marketplace.</span> All rights reserved.
+        <div className="pt-10 border-t border-border flex flex-col md:flex-row justify-between items-center gap-8">
+          <p className="text-sm font-bold text-muted-foreground">
+            © {currentYear} <span className="text-foreground">Bazaari Marketplace.</span> All rights reserved.
           </p>
           
-          <div className="flex gap-8 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">
-            <span className="hover:text-blue-500 cursor-pointer transition-colors">Privacy Policy</span>
-            <span className="hover:text-blue-500 cursor-pointer transition-colors">Terms of Use</span>
-            <span className="hover:text-blue-500 cursor-pointer transition-colors">Cookie Settings</span>
+          <div className="flex gap-8 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">
+            <span className="hover:text-primary cursor-pointer transition-colors">Privacy Policy</span>
+            <span className="hover:text-primary cursor-pointer transition-colors">Terms of Use</span>
+            <span className="hover:text-primary cursor-pointer transition-colors">Cookie Settings</span>
           </div>
         </div>
       </div>
@@ -114,12 +114,12 @@ export default function Footer() {
 function FooterLinkGroup({ title, links }: { title: string; links: string[] }) {
   return (
     <div className="space-y-6">
-      <h4 className="font-black text-white uppercase tracking-[0.3em] text-[11px]">{title}</h4>
+      <h4 className="font-black text-foreground uppercase tracking-[0.3em] text-[11px]">{title}</h4>
       <ul className="space-y-4">
         {links.map((link) => (
           <li key={link} className="group flex items-center gap-2">
-            <span className="w-0 h-[2px] bg-blue-500 transition-all duration-300 group-hover:w-4" />
-            <span className="text-sm font-bold text-slate-400 group-hover:text-white cursor-pointer transition-all hover:translate-x-1">
+            <span className="w-0 h-[2px] bg-primary transition-all duration-300 group-hover:w-4" />
+            <span className="text-sm font-bold text-muted-foreground group-hover:text-foreground cursor-pointer transition-all hover:translate-x-1">
               {link}
             </span>
           </li>

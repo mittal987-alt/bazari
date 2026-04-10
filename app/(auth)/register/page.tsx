@@ -55,11 +55,11 @@ export default function RegisterPage() {
       flex 
       items-center 
       justify-center 
-      bg-gradient-to-br 
-      from-[#0f172a] 
-      via-[#1e293b] 
-      to-black
+      bg-background
+      transition-colors
+      duration-500
     ">
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5 -z-10" />
       <motion.div
         initial={{ opacity: 0, y: 40, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -67,18 +67,18 @@ export default function RegisterPage() {
         className="
                  w-full max-w-md 
                  p-8 rounded-2xl 
-                 bg-white/10 
-                 backdrop-blur-md 
-                 border border-white/20
-                 shadow-xl
+                 bg-card/50
+                 backdrop-blur-xl 
+                 border border-border
+                 shadow-2xl
                " >
 
         {/* Header */}
         <div className="text-center mb-6">
-          <h1 className="text-3xl font-extrabold text-white">
-            OLX
+          <h1 className="text-3xl font-extrabold text-foreground tracking-tighter uppercase italic">
+            Bazaari
           </h1>
-          <p className="text-sm text-gray-300 mt-1">
+          <p className="text-sm text-muted-foreground mt-1 font-medium">
             Create your account
           </p>
         </div>
@@ -94,11 +94,10 @@ export default function RegisterPage() {
           </motion.p>
         )}
 
-        {/* Inputs */}
         <div className="space-y-4">
           <Input
             placeholder="Full Name"
-            className="bg-white/90"
+            className="bg-background/50 border-border focus:ring-2 focus:ring-primary/20"
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
@@ -106,7 +105,7 @@ export default function RegisterPage() {
           <Input
             placeholder="Email address"
             type="email"
-            className="bg-white/90"
+            className="bg-background/50 border-border focus:ring-2 focus:ring-primary/20"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
@@ -114,7 +113,7 @@ export default function RegisterPage() {
           <Input
             placeholder="Password"
             type="password"
-            className="bg-white/90"
+            className="bg-background/50 border-border focus:ring-2 focus:ring-primary/20"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
@@ -124,17 +123,17 @@ export default function RegisterPage() {
         <Button
           onClick={handleRegister}
           disabled={loading}
-          className="w-full mt-6 bg-white text-black hover:bg-gray-200"
+          className="w-full mt-6 bg-primary text-primary-foreground hover:bg-primary/90 shadow-xl transition-all duration-300 rounded-xl py-6 font-bold uppercase tracking-widest text-xs"
         >
           {loading ? "Creating..." : "Register"}
         </Button>
 
         {/* Footer */}
-        <p className="mt-6 text-center text-sm text-gray-400">
+        <p className="mt-6 text-center text-sm text-muted-foreground">
           Already have an account?{" "}
           <Link
             href="/login"
-            className="text-white font-medium hover:underline"
+            className="text-foreground font-bold hover:underline"
           >
             Login
           </Link>
