@@ -60,16 +60,8 @@ export default function LoginPage() {
   if (!authChecked) return null;
 
   return (
-      <div className="
-      min-h-screen 
-      w-full 
-      flex 
-      items-center 
-      justify-center 
-      bg-background
-      transition-colors
-      duration-500
-    ">
+    <div className="min-h-screen w-full flex items-center justify-center bg-background relative overflow-hidden transition-all duration-700">
+      <div className="absolute inset-0 bg-dot-grid pointer-events-none opacity-40 shrink-0" />
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5 -z-10" />
       <motion.div
         initial={{ opacity: 0, y: 40, scale: 0.95 }}
@@ -84,13 +76,15 @@ export default function LoginPage() {
                  shadow-2xl
                " >
 
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-extrabold text-foreground tracking-tighter uppercase italic">
-            Bazaari
+        <div className="text-center mb-10">
+          <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center text-white font-black italic mx-auto mb-6 shadow-2xl shadow-primary/30 transform -rotate-6">
+            B
+          </div>
+          <h1 className="text-4xl font-black text-foreground tracking-tighter uppercase italic">
+            Bazaari<span className="text-primary not-italic">.</span>
           </h1>
-          <p className="text-muted-foreground mt-2 text-sm font-medium">
-            Login to your marketplace account
+          <p className="text-muted-foreground mt-3 text-sm font-medium">
+            Welcome back to the marketplace
           </p>
         </div>
 
@@ -127,9 +121,9 @@ export default function LoginPage() {
         <Button
           onClick={handleLogin}
           disabled={loading}
-          className="w-full mt-6 bg-primary text-primary-foreground hover:bg-primary/90 shadow-xl transition-all duration-300 rounded-xl py-6 font-bold uppercase tracking-widest text-xs"
+          className="w-full mt-8 bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-[1.02] active:scale-95 shadow-xl shadow-primary/20 transition-all duration-300 rounded-2xl py-7 font-black uppercase tracking-[0.2em] text-[10px]"
         >
-          {loading ? "Logging in..." : "Login"}
+          {loading ? "Verifying..." : "Login to Account"}
         </Button>
 
         <div className="mt-8 border-t border-border/50 pt-6 text-center space-y-3">

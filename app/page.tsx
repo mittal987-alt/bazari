@@ -25,7 +25,9 @@ export default function HomePage() {
   if (!authChecked) return null;
 
   return (
-    <div className="min-h-screen bg-background text-foreground transition-colors duration-500">
+    <div className="min-h-screen bg-background text-foreground transition-all duration-700 relative overflow-hidden">
+      <div className="absolute inset-0 bg-dot-grid pointer-events-none opacity-40 shrink-0" />
+      <div className="relative z-10">
 
       {/* HERO */}
       <section className="max-w-7xl mx-auto px-6 py-24 text-center">
@@ -98,27 +100,20 @@ export default function HomePage() {
       </section>
 
       {/* FOOTER */}
-      <footer className="border-t border-border py-12 text-center text-sm text-muted-foreground bg-muted/20">
+      <footer className="border-t border-border py-12 text-center text-sm text-muted-foreground bg-card/40 backdrop-blur-md">
         © {new Date().getFullYear()} Bazaari. All rights reserved.
       </footer>
     </div>
-  );
+  </div>
+);
 }
 
-function FeatureCard({
-  icon,
-  title,
-  desc,
-}: {
-  icon: string;
-  title: string;
-  desc: string;
-}) {
+function FeatureCard({ icon, title, desc }: { icon: string, title: string, desc: string }) {
   return (
-    <div className="rounded-2xl border border-border p-6 bg-card shadow-sm hover:shadow-md hover:bg-accent/10 transition-all duration-300">
-      <div className="text-4xl mb-4">{icon}</div>
-      <h3 className="text-xl font-bold text-foreground">{title}</h3>
-      <p className="mt-2 text-muted-foreground text-sm leading-relaxed">{desc}</p>
+    <div className="dashboard-card p-10 group bg-card/50 backdrop-blur-md border-border/40 hover:bg-card">
+      <div className="text-6xl mb-8 group-hover:scale-110 transition-transform duration-500">{icon}</div>
+      <h3 className="text-2xl font-black text-foreground tracking-tighter">{title}</h3>
+      <p className="mt-4 text-muted-foreground/80 text-sm font-medium leading-relaxed">{desc}</p>
     </div>
   );
 }

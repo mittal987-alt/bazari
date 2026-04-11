@@ -88,7 +88,7 @@ export default function Navbar() {
         
         {/* --- BRANDING --- */}
         <Link href="/" className="flex items-center gap-3 group">
-          <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-black italic shadow-[0_0_20px_rgba(37,99,235,0.3)] transition-all group-hover:scale-110">
+          <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-black italic shadow-2xl shadow-primary/20 transition-all group-hover:scale-110">
             B
           </div>
           <span className="hidden md:block text-2xl font-black tracking-tighter uppercase text-foreground">
@@ -99,9 +99,9 @@ export default function Navbar() {
         {/* --- REFINED SEARCH BAR --- */}
         <form
           onSubmit={(e) => { e.preventDefault(); router.push(`/nearby?search=${search}`); }}
-          className="hidden lg:flex flex-1 max-w-lg items-center relative bg-muted/30 border border-input rounded-2xl px-5 py-2.5 transition-all focus-within:border-blue-500 focus-within:bg-muted/50"
+          className="hidden lg:flex flex-1 max-w-lg items-center relative bg-muted/30 border border-input rounded-2xl px-5 py-2.5 transition-all focus-within:border-primary focus-within:bg-muted/50"
         >
-          <FiSearch className="text-muted-foreground group-focus-within:text-blue-400" size={18} />
+          <FiSearch className="text-muted-foreground group-focus-within:text-primary" size={18} />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -119,7 +119,7 @@ export default function Navbar() {
              type="button"
              onClick={() => fileInputRef.current?.click()}
              disabled={isAnalyzing}
-             className="absolute right-12 text-slate-400 hover:text-blue-400 transition-colors"
+             className="absolute right-12 text-muted-foreground hover:text-primary transition-colors"
              title="Search by Object Image"
           >
              {isAnalyzing ? <FiLoader size={18} className="animate-spin" /> : <FiCamera size={18} />}
@@ -164,7 +164,7 @@ export default function Navbar() {
               <>
                 <Link
                   href="/dashboard/seller"
-                  className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20 active:scale-95 flex items-center gap-2"
+                  className="bg-primary hover:bg-primary/90 text-white px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-primary/20 active:scale-95 flex items-center gap-2"
                 >
                   <FiPlus size={16} />
                   List Ad
@@ -177,10 +177,11 @@ export default function Navbar() {
                 </button>
               </>
             ) : (
-              <Link href="/login" className="bg-foreground text-background px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all">
+              <Link href="/login" className="bg-primary text-white px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-primary/90 hover:scale-105 transition-all shadow-lg shadow-primary/20">
                 Join
               </Link>
             )}
+
           </div>
 
           <button onClick={() => setMobileOpen(!mobileOpen)} className="xl:hidden text-foreground p-2">

@@ -80,30 +80,30 @@ export default function UltraPremiumSellerDashboard() {
   }, [ads, filter, searchQuery]);
 
   return (
-    <div className="min-h-screen bg-[#FBFBFE] text-[#1A1C21] pb-24 font-sans selection:bg-blue-100">
-      
-      {/* --- PREMIUM HEADER --- */}
-      <div className="bg-white border-b border-slate-200/60 pt-20 pb-16 relative overflow-hidden">
+    <div className="min-h-screen bg-background text-foreground pb-24 font-sans selection:bg-primary/10 relative overflow-hidden">
+      <div className="absolute inset-0 bg-dot-grid pointer-events-none opacity-40" />
+      <div className="relative z-10">
+      <div className="bg-card/30 backdrop-blur-xl border-b border-border pt-20 pb-16 relative overflow-hidden">
         {/* Decorative Blur Background */}
-        <div className="absolute top-[-10%] right-[-5%] w-[400px] h-[400px] bg-blue-100/40 rounded-full blur-[120px] -z-0" />
+        <div className="absolute top-[-10%] right-[-5%] w-[400px] h-[400px] bg-primary/10 rounded-full blur-[120px] -z-0" />
         
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8 mb-16">
             <div>
               <motion.p 
                 initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
-                className="text-blue-600 text-[10px] font-black uppercase tracking-[0.2em] mb-3"
+                className="text-primary text-[10px] font-black uppercase tracking-[0.2em] mb-3"
               >
                 Seller Command Center
               </motion.p>
               <h1 className="text-5xl md:text-7xl font-black tracking-tighter leading-none">
-                Console<span className="text-blue-600">.</span>
+                Console<span className="text-primary">.</span>
               </h1>
             </div>
 
             <Link
               href="/create-ad"
-              className="group flex items-center gap-3 bg-[#1A1C21] hover:bg-blue-600 text-white px-8 py-4 rounded-[2rem] transition-all shadow-xl shadow-slate-200 active:scale-95"
+              className="group flex items-center gap-3 bg-primary hover:bg-primary/90 text-white px-8 py-4 rounded-[2rem] transition-all shadow-xl shadow-primary/20 active:scale-95"
             >
               <FiPlus className="text-xl group-hover:rotate-90 transition-transform duration-300" />
               <span className="font-bold tracking-tight">Post New Listing</span>
@@ -202,27 +202,36 @@ export default function UltraPremiumSellerDashboard() {
 
       </div>
     </div>
-  );
+  </div>
+);
 }
 
 // --- DESIGN COMPONENTS ---
 
-function StatCard({ label, value, icon, color }: any) {
+ function StatCard({ label, value, icon, color }: any) {
   const colorMap: any = {
-    blue: "text-blue-600 bg-blue-50",
-    indigo: "text-indigo-600 bg-indigo-50",
-    emerald: "text-emerald-600 bg-emerald-50",
-    amber: "text-amber-600 bg-amber-50",
+    blue: "from-blue-600/90 to-blue-700 text-white shadow-blue-500/20",
+    indigo: "from-indigo-600/90 to-indigo-700 text-white shadow-indigo-500/20",
+    emerald: "from-emerald-600/90 to-emerald-700 text-white shadow-emerald-500/20",
+    amber: "from-amber-500/90 to-amber-600 text-white shadow-amber-500/20",
   };
 
   return (
-    <motion.div whileHover={{ y: -5 }} className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm transition-all group">
-      <div className="flex justify-between items-start mb-6">
-        <div className={`p-4 rounded-2xl ${colorMap[color]} transition-transform group-hover:scale-110 duration-300`}>{icon}</div>
-        <FiArrowUpRight className="text-slate-300 group-hover:text-blue-500 transition-colors" />
+    <motion.div 
+      whileHover={{ y: -8, scale: 1.02 }} 
+      className={`relative overflow-hidden bg-gradient-to-br ${colorMap[color]} p-8 rounded-[2.5rem] shadow-2xl transition-all group border border-white/10`}
+    >
+      <div className="relative z-10">
+        <div className="flex justify-between items-start mb-6">
+          <div className={`p-4 rounded-2xl bg-white/10 backdrop-blur-md transition-transform group-hover:rotate-12 duration-300`}>{icon}</div>
+          <FiArrowUpRight className="text-white/40 group-hover:text-white transition-colors" />
+        </div>
+        <p className="text-white/60 text-[10px] font-black uppercase tracking-widest mb-1">{label}</p>
+        <h3 className="text-3xl font-black tracking-tighter">{value}</h3>
       </div>
-      <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1">{label}</p>
-      <h3 className="text-3xl font-black tracking-tighter">{value}</h3>
+      
+      {/* Decorative inner glow */}
+      <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
     </motion.div>
   );
 }
@@ -242,12 +251,12 @@ function PremiumListingCard({ ad, onDelete }: any) {
   const statusInfo = getStatusInfo(ad.status);
 
   return (
-    <motion.div
+     <motion.div
       layout
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      className="group bg-white p-5 rounded-[2.5rem] border border-slate-100 hover:border-blue-200/50 hover:shadow-2xl hover:shadow-blue-500/5 transition-all duration-500 flex items-center gap-8"
+      className="group bg-card/60 backdrop-blur-md p-5 rounded-[2.5rem] border border-border/50 hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500 flex items-center gap-8"
     >
       <div className="relative w-32 h-32 rounded-[2rem] overflow-hidden shrink-0 shadow-lg group-hover:shadow-blue-200/40 transition-shadow">
         <Image src={ad.images?.[0] || "/placeholder.png"} fill className="object-cover group-hover:scale-110 transition-transform duration-700" alt="listing" />
@@ -268,7 +277,7 @@ function PremiumListingCard({ ad, onDelete }: any) {
                   {statusInfo.label}
                </div>
             </div>
-            <p className="text-3xl font-black text-blue-600 mt-1">₹{ad.price?.toLocaleString()}</p>
+             <p className="text-3xl font-black text-primary mt-1">₹{ad.price?.toLocaleString()}</p>
           </div>
           <div className="flex gap-2">
              <Link href={`/dashboard/seller/edit/${ad._id}`} className="w-12 h-12 bg-slate-50 hover:bg-[#1A1C21] rounded-2xl flex items-center justify-center text-slate-400 hover:text-white transition-all shadow-sm">
