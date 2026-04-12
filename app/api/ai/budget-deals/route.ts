@@ -37,6 +37,7 @@ export async function POST(req: NextRequest) {
     }
 
     const productListStr = ads.map(ad => `
+- ID: ${ad._id.toString()}
 - Title: ${ad.title}
 - Price: ₹${ad.price}
 - Category: ${ad.category}
@@ -44,46 +45,79 @@ export async function POST(req: NextRequest) {
 - Description: ${ad.description}
 `).join("\n");
 
-    const aiResponse = await fetch("https://api.x.ai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model: "grok-beta",
-        messages: [
-          {
-            role: "system",
-            content: "You are an AI shopping assistant for an online marketplace. Your task is to recommend the best products within the user's budget, prioritizing value for money, condition, and relevance."
-          },
-          {
-            role: "user",
-            content: `User Budget: ₹${budget}\nUser Query: ${query || "Anything good"}\n\nAvailable Products:\n${productListStr}\n\nYour task:\n1. Recommend the best products within the user’s budget.\n2. Prioritize value for money, good condition, and relevance.\n3. If no exact match, suggest slightly higher/lower options.\n4. Explain briefly why each product is recommended.\n\nOutput ONLY a JSON array of objects with these keys: "name", "price", "reason", "adId". Match "adId" to the original product if possible. Respond ONLY with the JSON array.`
-          }
-        ],
-        temperature: 0.7,
-      })
-    });
-
-    if (!aiResponse.ok) {
-      const errorData = await aiResponse.json();
-      throw new Error(errorData.error?.message || "AI API call failed");
-    }
-
-    const aiData = await aiResponse.json();
     let recommendations = [];
+    let isMock = false;
+
     try {
-      const content = aiData.choices[0].message.content.trim();
-      // Remove markdown code blocks if present
-      const jsonString = content.replace(/^```json\n?/, "").replace(/\n?```$/, "");
-      recommendations = JSON.parse(jsonString);
-    } catch (e) {
-      console.error("Failed to parse AI JSON:", e);
-      return NextResponse.json({ 
-        message: "AI assistant was unable to format results, please try a different query.", 
-        raw: aiData.choices[0].message.content 
-      }, { status: 500 });
+      const aiResponse = await fetch("https://api.x.ai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: "grok-3",
+          messages: [
+            {
+              role: "system",
+              content: "You are an AI shopping assistant for an online marketplace. Your task is to recommend the best products within the user's budget, prioritizing value for money, condition, and relevance. Respond only in JSON format."
+            },
+            {
+              role: "user",
+              content: `User Budget: ₹${budget}\nUser Query: ${query || "Anything good"}\n\nAvailable Products:\n${productListStr}\n\nYour task:\n1. Recommend the best products within the user’s budget.\n2. Prioritize value for money, good condition, and relevance.\n3. If no exact match found, you can suggest slightly higher/lower options from the list.\n4. Explain briefly why each product is recommended.\n\nOutput ONLY a JSON object with a key "recommendations" containing an array of objects with these keys: "name", "price", "reason", "adId". Match "adId" EXACTLY to the "ID" provided in the list. Respond ONLY with the JSON object.`
+            }
+          ],
+          temperature: 0,
+          response_format: { type: "json_object" }
+        })
+      });
+
+      if (!aiResponse.ok) {
+        const errorData = await aiResponse.json();
+        console.error("AI API Error Details:", JSON.stringify(errorData, null, 2));
+        const errorMessage = typeof errorData.error === "string" 
+          ? errorData.error 
+          : errorData.error?.message || "AI API call failed";
+        throw new Error(errorMessage);
+      }
+
+      const aiData = await aiResponse.json();
+      const contentStr = aiData.choices[0].message.content.trim();
+      const content = JSON.parse(contentStr);
+      recommendations = content.recommendations || [];
+    } catch (error: any) {
+      console.warn("Falling back to Mock AI Mode due to:", error.message);
+      isMock = true;
+      
+      // Fallback: Smart Keyword Matching + Value Ranking
+      const searchKeywords = (query || "").toLowerCase().split(" ").filter(k => k.length > 2);
+      
+      recommendations = ads
+        .map(ad => {
+          let score = 0;
+          const title = ad.title.toLowerCase();
+          const desc = ad.description.toLowerCase();
+          
+          // Match keywords
+          searchKeywords.forEach(kw => {
+            if (title.includes(kw)) score += 10;
+            if (desc.includes(kw)) score += 5;
+          });
+
+          // Budget proximity (closer to budget is better, but slightly under is best)
+          const priceDiff = Math.abs(ad.price - budget);
+          score += Math.max(0, 20 - (priceDiff / budget) * 20);
+
+          return { ad, score };
+        })
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 3)
+        .map(({ ad }) => ({
+          name: ad.title,
+          price: ad.price,
+          adId: ad._id.toString(),
+          reason: `Market Insight: This ${ad.category} item offers excellent value at ₹${ad.price.toLocaleString("en-IN")}. It is priced competitively for its category and matches your interest in ${query || "quality products"}.`
+        }));
     }
 
     if (!Array.isArray(recommendations) || recommendations.length === 0) {
@@ -94,11 +128,12 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Map AI recommendations to original Ad objects for the UI
+    // Map recommendations to original Ad objects for the UI
     const finalRecommendations = recommendations.map((rec: any) => {
-      const originalAd = ads.find(a => a.title === rec.name || a._id.toString() === rec.adId);
+      const originalAd = ads.find(a => a._id.toString() === rec.adId || a.title === rec.name);
       return {
         ...rec,
+        isMock,
         ad: originalAd
       };
     });

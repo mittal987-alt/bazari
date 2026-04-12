@@ -80,11 +80,11 @@ export default function BudgetShoppingPage() {
       {!mounted ? null : (
         <>
           {/* Hero Section */}
-          <div className="relative overflow-hidden bg-slate-900 py-24 text-white">
+          <div className="relative overflow-hidden bg-slate-900 py-16 md:py-24 text-white">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,#3b82f61a_0%,transparent_50%)]"></div>
             <div className="absolute inset-x-0 bottom-0 h-px bg-slate-800"></div>
 
-            <div className="max-w-7xl mx-auto px-8 relative">
+            <div className="max-w-7xl mx-auto px-5 md:px-8 relative">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -94,11 +94,11 @@ export default function BudgetShoppingPage() {
                   <FiZap className="fill-current" /> Powered by xAI Grok-Beta
                 </div>
 
-                <h1 className="text-5xl font-black tracking-tighter italic mb-6">
+                <h1 className="text-4xl md:text-5xl font-black tracking-tighter italic mb-4 md:mb-6 leading-tight">
                   Shop Smarter<span className="text-blue-500">.</span> AI Assistant
                 </h1>
 
-                <p className="text-slate-400 font-medium text-lg leading-relaxed mb-12">
+                <p className="text-slate-400 font-medium text-base md:text-lg leading-relaxed mb-8 md:mb-12">
                   Tell us your budget and what you're looking for. Our AI analyzes
                   the entire marketplace to find the absolute best value for your
                   money.
@@ -115,7 +115,7 @@ export default function BudgetShoppingPage() {
                       placeholder="Enter Budget (e.g. 10000)"
                       value={budget}
                       onChange={(e) => setBudget(e.target.value)}
-                      className="w-full pl-16 pr-8 py-5 rounded-3xl bg-slate-800 border border-slate-700 text-white"
+                      className="w-full pl-14 pr-6 md:pl-16 md:pr-8 py-4 md:py-5 rounded-2xl md:rounded-3xl bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500 transition-colors"
                     />
                   </div>
 
@@ -129,7 +129,7 @@ export default function BudgetShoppingPage() {
                       placeholder="What are you looking for?"
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
-                      className="w-full pl-16 pr-8 py-5 rounded-3xl bg-slate-800 border border-slate-700 text-white"
+                      className="w-full pl-14 pr-6 md:pl-16 md:pr-8 py-4 md:py-5 rounded-2xl md:rounded-3xl bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500 transition-colors"
                     />
                   </div>
 
@@ -137,7 +137,7 @@ export default function BudgetShoppingPage() {
                   <button
                     onClick={handleSearch}
                     disabled={loading}
-                    className="px-10 py-5 bg-blue-600 text-white rounded-3xl flex items-center gap-3"
+                    className="w-full md:w-auto px-8 md:px-10 py-4 md:py-5 bg-blue-600 text-white rounded-2xl md:rounded-3xl flex items-center justify-center gap-3 hover:bg-blue-500 transition-colors font-bold"
                   >
                     {loading ? <FiLoader className="animate-spin" /> : <FiZap />}
                     {loading ? "Analyzing..." : "Find Deals"}
@@ -152,7 +152,7 @@ export default function BudgetShoppingPage() {
           </div>
 
           {/* Results */}
-          <div className="max-w-7xl mx-auto px-8 -mt-10 grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="max-w-7xl mx-auto px-5 md:px-8 mt-8 md:-mt-10 grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 relative z-10">
             {loading ? (
               [1, 2, 3].map((i) => (
                 <div

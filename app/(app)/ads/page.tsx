@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import api from "@/lib/api";
 import { 
@@ -27,18 +28,28 @@ interface SidebarInputProps {
   isSmall?: boolean;
 }
 
-export default function AdsPage() {
+function AdsPageContent() {
+  const searchParams = useSearchParams();
+
   const [ads, setAds] = useState<Ad[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  // Filters State
-  const [search, setSearch] = useState("");
-  const [city, setCity] = useState("");
-  const [min, setMin] = useState("");
-  const [max, setMax] = useState("");
-  const [sort, setSort] = useState("");
+  // Filters State initialized from URL params if present
+  const [search, setSearch] = useState(searchParams.get("search") || "");
+  const [city, setCity] = useState(searchParams.get("city") || "");
+  const [min, setMin] = useState(searchParams.get("min") || "");
+  const [max, setMax] = useState(searchParams.get("max") || "");
+  const [sort, setSort] = useState(searchParams.get("sort") || "");
+  const categoryParam = searchParams.get("category");
+
+  // If a category was passed directly instead of search
+  useEffect(() => {
+    if (categoryParam && !search) {
+      setSearch(categoryParam); // Just use it as a keyword search for maximum compatibility
+    }
+  }, [categoryParam]);
 
   const fetchAds = useCallback(async (pageNumber: number, reset = false) => {
     try {
@@ -99,20 +110,20 @@ export default function AdsPage() {
     <div className="min-h-screen bg-[#FDFDFD] text-slate-900 pb-20">
       
       {/* 🌌 AMBIENT TOP BAR */}
-      <div className="bg-white border-b border-slate-100 sticky top-0 z-30 py-4 px-8 shadow-sm backdrop-blur-md bg-white/80">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-           <h1 className="text-xl font-black tracking-tighter uppercase">Marketplace<span className="text-blue-600">.</span></h1>
-           <div className="text-[10px] font-black uppercase text-slate-400 tracking-widest bg-slate-50 px-4 py-1.5 rounded-full border border-slate-100">
+      <div className="bg-white border-b border-slate-100 sticky top-0 z-30 py-4 px-4 md:px-8 shadow-sm backdrop-blur-md bg-white/80">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+           <h1 className="text-xl md:text-2xl font-black tracking-tighter uppercase">Marketplace<span className="text-blue-600">.</span></h1>
+           <div className="text-[10px] font-black uppercase text-slate-400 tracking-widest bg-slate-50 px-4 py-1.5 rounded-full border border-slate-100 whitespace-nowrap">
              {ads.length} Items Found
            </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-8 py-10 grid grid-cols-12 gap-12">
+      <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 md:py-10 grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12">
 
         {/* --- 🔎 PREMIUM SIDEBAR --- */}
-        <aside className="col-span-12 lg:col-span-3">
-          <div className="sticky top-28 space-y-8 bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-[0_20px_50px_rgba(0,0,0,0.02)]">
+        <aside className="lg:col-span-3">
+          <div className="sticky top-28 space-y-6 md:space-y-8 bg-white p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] border border-slate-100 shadow-[0_20px_50px_rgba(0,0,0,0.02)]">
             
             <div className="flex items-center gap-2 text-blue-600 mb-2">
                <FiFilter />
@@ -158,7 +169,7 @@ export default function AdsPage() {
         </aside>
 
         {/* --- 🛒 LISTINGS GRID --- */}
-        <main className="col-span-12 lg:col-span-9">
+        <main className="lg:col-span-9">
           {ads.length === 0 && !loading ? (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center py-32 bg-slate-50 rounded-[3rem] border-2 border-dashed border-slate-200">
                <FiInbox className="text-slate-200 text-6xl mb-4" />
@@ -227,5 +238,13 @@ function SidebarInput({ icon, placeholder, value, onChange, isSmall = false }: S
         className={`${icon ? 'pl-12' : 'px-5'} ${isSmall ? 'py-3' : 'py-4'} w-full bg-slate-50 border-none rounded-2xl text-xs font-bold outline-none ring-2 ring-transparent focus:ring-blue-100 focus:bg-white transition-all placeholder:text-slate-300`}
       />
     </div>
+  );
+}
+
+export default function AdsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center font-black animate-pulse">LOADING MARKETPLACE...</div>}>
+      <AdsPageContent />
+    </Suspense>
   );
 }

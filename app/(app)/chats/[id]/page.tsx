@@ -129,7 +129,7 @@ export default function PremiumChatRoom() {
   const ad = chatMeta.adId;
 
   return (
-    <div className="h-screen flex flex-col bg-[#F8F9FB] text-slate-900 font-sans">
+    <div className="h-[100dvh] flex flex-col bg-[#F8F9FB] text-slate-900 font-sans relative">
       
       {/* HEADER: USER & AD INFO */}
       <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50 px-4 py-3">

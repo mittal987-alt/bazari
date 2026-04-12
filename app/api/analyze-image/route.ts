@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    let predictedCategory = "Electronics"; // Default fallback
+    let searchQuery = "Items"; // Default fallback
     let labels: string[] = [];
 
     // 1. Try Google Cloud Vision if API Key is available
@@ -33,19 +33,8 @@ export async function POST(req: NextRequest) {
         
         if (visionLabels && visionLabels.length > 0) {
           labels = visionLabels.map(label => label.description || "");
-          
-          // Map labels to categories
-          const electronicsKeywords = ["electronics", "phone", "laptop", "computer", "gadget", "device", "camera"];
-          const vehiclesKeywords = ["vehicle", "car", "bike", "motorcycle", "truck", "automobile"];
-          const propertyKeywords = ["property", "house", "building", "real estate", "apartment", "home"];
-
-          if (electronicsKeywords.some(kw => labels.some(l => l.toLowerCase().includes(kw)))) {
-            predictedCategory = "Electronics";
-          } else if (vehiclesKeywords.some(kw => labels.some(l => l.toLowerCase().includes(kw)))) {
-            predictedCategory = "Vehicles";
-          } else if (propertyKeywords.some(kw => labels.some(l => l.toLowerCase().includes(kw)))) {
-            predictedCategory = "Property";
-          }
+          // Use the most confident label that isn't too generic if possible, or just the top label.
+          searchQuery = labels[0]; 
         }
       } catch (visionErr) {
         console.error("Vision API Error:", visionErr);
@@ -65,7 +54,7 @@ export async function POST(req: NextRequest) {
                     role: "user",
                     parts: [
                         {
-                            text: "Analyze this image and classify the main object into exactly ONE of the following three categories: 'Electronics', 'Vehicles', or 'Property'. Reply ONLY with the category name."
+                            text: "Analyze this image and identify the specific product or item shown. Return a concise 1-3 word search query that would be perfect for finding it on a marketplace (e.g., 'iPhone 13', 'MacBook Air', 'Gaming Chair', 'Honda Civic'). Reply ONLY with the search query text, without any quotes or extra formatting."
                         },
                         {
                             inlineData: {
@@ -80,9 +69,8 @@ export async function POST(req: NextRequest) {
 
         const outputText = response.text || "";
         const cleaned = outputText.trim();
-        const validCategories = ["Electronics", "Vehicles", "Property"];
-        if (validCategories.includes(cleaned)) {
-          predictedCategory = cleaned;
+        if (cleaned && cleaned.length < 50) {
+          searchQuery = cleaned.replace(/['"]/g, ''); // strip any quotes AI might add
         }
       } catch (geminiErr) {
         console.error("Gemini AI Error:", geminiErr);
@@ -91,7 +79,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      category: predictedCategory,
+      searchQuery: searchQuery,
       labels: labels.slice(0, 5), // Return top 5 labels for UI if needed
       message: labels.length > 0 ? "Analyzed with Google Cloud Vision" : "Analyzed with Gemini AI",
     });

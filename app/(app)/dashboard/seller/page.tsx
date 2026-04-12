@@ -103,7 +103,7 @@ export default function UltraPremiumSellerDashboard() {
 
             <Link
               href="/create-ad"
-              className="group flex items-center gap-3 bg-primary hover:bg-primary/90 text-white px-8 py-4 rounded-[2rem] transition-all shadow-xl shadow-primary/20 active:scale-95"
+              className="group flex items-center justify-center w-full md:w-auto gap-3 bg-primary hover:bg-primary/90 text-white px-8 py-4 rounded-[2rem] transition-all shadow-xl shadow-primary/20 active:scale-95"
             >
               <FiPlus className="text-xl group-hover:rotate-90 transition-transform duration-300" />
               <span className="font-bold tracking-tight">Post New Listing</span>
@@ -131,7 +131,7 @@ export default function UltraPremiumSellerDashboard() {
                 <button
                   key={tab}
                   onClick={() => setFilter(tab)}
-                  className={`relative px-8 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+                  className={`relative px-4 sm:px-8 py-2 md:py-2.5 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap ${
                     filter === tab ? "text-white" : "text-slate-400 hover:text-slate-600"
                   }`}
                 >
@@ -256,9 +256,9 @@ function PremiumListingCard({ ad, onDelete }: any) {
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      className="group bg-card/60 backdrop-blur-md p-5 rounded-[2.5rem] border border-border/50 hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500 flex items-center gap-8"
+      className="group bg-card/60 backdrop-blur-md p-5 rounded-[2.5rem] border border-border/50 hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500 flex flex-col sm:flex-row items-center sm:items-start gap-5 sm:gap-8"
     >
-      <div className="relative w-32 h-32 rounded-[2rem] overflow-hidden shrink-0 shadow-lg group-hover:shadow-blue-200/40 transition-shadow">
+      <div className="relative w-full h-48 sm:w-32 sm:h-32 rounded-[2rem] overflow-hidden shrink-0 shadow-lg group-hover:shadow-blue-200/40 transition-shadow">
         <Image src={ad.images?.[0] || "/placeholder.png"} fill className="object-cover group-hover:scale-110 transition-transform duration-700" alt="listing" />
         {ad.status === "sold" && (
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center">
@@ -267,11 +267,11 @@ function PremiumListingCard({ ad, onDelete }: any) {
         )}
       </div>
 
-      <div className="flex-1 min-w-0">
-        <div className="flex justify-between items-start">
+      <div className="flex-1 min-w-0 w-full">
+        <div className="flex justify-between items-start gap-4">
           <div className="min-w-0">
-            <div className="flex items-center gap-3 mb-1">
-               <h3 className="text-xl font-black text-slate-900 truncate tracking-tight">{ad.title}</h3>
+            <div className="flex items-center gap-2 sm:gap-3 mb-1 flex-wrap">
+               <h3 className="text-lg sm:text-xl font-black text-slate-900 truncate tracking-tight">{ad.title}</h3>
                <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${statusInfo.color}`}>
                   {statusInfo.icon}
                   {statusInfo.label}
@@ -289,11 +289,11 @@ function PremiumListingCard({ ad, onDelete }: any) {
           </div>
         </div>
 
-        <div className="flex gap-6 mt-6 border-t border-slate-50 pt-5">
-          <div className="flex items-center gap-2 text-xs font-black text-slate-400 uppercase tracking-widest">
-            <FiEye className="text-blue-500" /> {ad.views || 0} <span className="hidden md:inline">Views</span>
+        <div className="flex gap-4 sm:gap-6 mt-5 sm:mt-6 border-t border-slate-50 pt-4 sm:pt-5 flex-wrap">
+          <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-xs font-black text-slate-400 uppercase tracking-widest">
+            <FiEye className="text-blue-500" /> {ad.views || 0} <span className="hidden sm:inline">Views</span>
           </div>
-          <div className="flex items-center gap-2 text-xs font-black text-slate-400 uppercase tracking-widest">
+          <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-xs font-black text-slate-400 uppercase tracking-widest">
             <FiMessageCircle className="text-indigo-500" /> {ad.chatCount || 0} <span className="hidden md:inline">Inquiries</span>
           </div>
           {ad.status !== "active" && (

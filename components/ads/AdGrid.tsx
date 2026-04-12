@@ -166,8 +166,8 @@ export default function AdGrid({
     <div
       className={
         layout === "horizontal"
-          ? "flex gap-5 overflow-x-auto pb-2"
-          : "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5"
+          ? "flex gap-4 sm:gap-5 overflow-x-auto pb-2"
+          : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5"
       }
     >
       {ads.map((ad) => (
@@ -176,7 +176,7 @@ export default function AdGrid({
           href={`/ads/${ad._id}`}
           className={`group relative rounded-[--radius] border border-border bg-card/60 backdrop-blur-md overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10 hover:border-primary/30 ${
             hoverEffect === "lift" ? "hover:-translate-y-2" : ""
-          }`}
+          } ${layout === "horizontal" ? "w-[240px] sm:w-[280px] shrink-0" : ""}`}
         >
           {/* IMAGE */}
           <div className="h-48 bg-muted relative overflow-hidden">
@@ -198,7 +198,7 @@ export default function AdGrid({
                 ₹ {ad.price.toLocaleString()}
               </p>
               <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-                 <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="rotate-45"><path d="M1 1.5C0.723858 1.5 0.5 1.72386 0.5 2V13C0.5 13.2761 0.723858 13.5 1 13.5H12C12.2761 13.5 12.5 13.2761 12.5 13V2C12.5 1.72386 12.2761 1.5 12 1.5H1Z" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                 <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="rotate-45"><path d="M1 1.5C0.723858 1.5 0.5 1.72386 0.5 2V13C0.5 13.2761 0.723858 13.5 1 13.5H12C12.2761 13.5 12.5 13.2761 12.5 13V2C12.5 1.72386 12.2761 1.5 12 1.5H1Z" fill="currentColor" fillOpacity="0.2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"></path></svg>
               </div>
             </div>
 

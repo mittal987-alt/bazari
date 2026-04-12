@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
             "Authorization": `Bearer ${apiKey}`
           },
           body: JSON.stringify({
-            model: "grok-beta",
+            model: "grok-3",
             messages: [
               {
                 role: "system",
@@ -85,25 +85,38 @@ export async function GET(req: NextRequest) {
               console.error("AI JSON Parse Error:", parseErr, "Content:", contentStr);
             }
           }
+        } else {
+          const errorData = await aiResponse.json();
+          console.warn("AI Estimation API Error (Falling back):", errorData.error);
         }
-      } catch (aiErr) {
-        console.error("AI Estimation Fetch Error:", aiErr);
+      } catch (aiErr: any) {
+        console.error("AI Estimation Fetch Error:", aiErr.message);
       }
     }
 
     // 4. Fallback Logic if AI fails or no key
-    if (!suggestedPrice && benchmark) {
-      suggestedPrice = benchmark.avgUsed;
-      minPrice = benchmark.minUsed;
-      maxPrice = benchmark.maxUsed;
-      message = "Based on our historical platform benchmarks.";
-      dataSource = "market_benchmark";
-    } else if (!suggestedPrice && similarAds.length > 0) {
-      const prices = similarAds.map(ad => ad.price);
-      suggestedPrice = Math.round(prices.reduce((a, b) => a + b, 0) / prices.length);
-      minPrice = Math.min(...prices);
-      maxPrice = Math.max(...prices);
-      message = "Based on active listings on our platform.";
+    if (!suggestedPrice) {
+      if (benchmark) {
+        suggestedPrice = benchmark.avgUsed;
+        minPrice = benchmark.minUsed;
+        maxPrice = benchmark.maxUsed;
+        message = "Market Snapshot: Our historical data shows consistent pricing for this category.";
+        dataSource = "market_benchmark";
+      } else if (similarAds.length > 0) {
+        const prices = similarAds.map(ad => ad.price);
+        suggestedPrice = Math.round(prices.reduce((a, b) => a + b, 0) / prices.length);
+        minPrice = Math.min(...prices);
+        maxPrice = Math.max(...prices);
+        message = "Platform Insight: Estimated based on current active listings for similar products.";
+        dataSource = "platform_data";
+      } else {
+        // Absolute fallback if no data exists
+        suggestedPrice = 5000;
+        minPrice = 1000;
+        maxPrice = 15000;
+        message = "Preliminary Estimate: Based on typical secondary market entry points.";
+        dataSource = "generalized_estimate";
+      }
     }
 
     return NextResponse.json({

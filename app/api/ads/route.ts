@@ -18,7 +18,12 @@ export async function GET(req: NextRequest) {
     const filter: any = {};
 
     if (search.trim() !== "") {
-      filter.title = { $regex: search, $options: "i" };
+      const words = search.trim().split(/\s+/).map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+      filter.$or = words.flatMap(word => [
+        { title: { $regex: word, $options: "i" } },
+        { description: { $regex: word, $options: "i" } },
+        { category: { $regex: word, $options: "i" } }
+      ]);
     }
 
     if (category && category !== "all") {

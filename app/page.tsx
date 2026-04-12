@@ -30,8 +30,8 @@ export default function HomePage() {
       <div className="relative z-10">
 
       {/* HERO */}
-      <section className="max-w-7xl mx-auto px-6 py-24 text-center">
-        <h1 className="text-4xl md:text-6xl font-extrabold leading-tight">
+      <section className="max-w-7xl mx-auto px-6 py-16 md:py-24 text-center">
+        <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold leading-tight">
           Buy & Sell Anything
           <span className="block text-primary mt-2">
             Near You
@@ -43,7 +43,7 @@ export default function HomePage() {
           Post ads, discover great deals, and connect instantly.
         </p>
 
-        <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
+        <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center w-full max-w-sm sm:max-w-none mx-auto">
           <Link
             href="/register"
             className="px-8 py-3 rounded-full bg-primary hover:bg-primary/90 transition text-primary-foreground font-semibold shadow-lg"

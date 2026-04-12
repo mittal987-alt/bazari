@@ -29,6 +29,7 @@ export default function Navbar() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+
   const user = useUserStore((s) => s.user);
   const clearUser = useUserStore((s) => s.clearUser);
 
@@ -61,8 +62,8 @@ export default function Navbar() {
 
       const data = await res.json();
       
-      if (res.ok && data.category) {
-        router.push(`/nearby?category=${encodeURIComponent(data.category)}`);
+      if (res.ok && data.searchQuery) {
+        router.push(`/ads?search=${encodeURIComponent(data.searchQuery)}`);
       } else {
         alert(data.message || "Failed to analyze image");
       }
@@ -74,11 +75,13 @@ export default function Navbar() {
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
+  const isChatRoom = pathname?.match(/^\/chats\/[a-zA-Z0-9_-]+$/);
+  if (isChatRoom) return null;
 
   return (
     <header 
       className={clsx(
-        "sticky top-0 z-[100] transition-all duration-500 w-full px-8 py-4",
+        "sticky top-0 z-[100] transition-all duration-500 w-full px-4 md:px-8 py-3 md:py-4",
         scrolled 
           ? "bg-background/85 backdrop-blur-xl border-b border-border shadow-2xl" 
           : "bg-background/90 backdrop-blur-md border-b border-border/50"
@@ -159,15 +162,15 @@ export default function Navbar() {
         <div className="flex items-center gap-4">
           <ThemeToggle />
           
-          <div className="flex items-center gap-3 pl-4 border-l border-white/10">
+          <div className="flex items-center gap-2 md:gap-3 pl-3 md:pl-4 border-l border-white/10">
             {user ? (
               <>
                 <Link
                   href="/dashboard/seller"
-                  className="bg-primary hover:bg-primary/90 text-white px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-primary/20 active:scale-95 flex items-center gap-2"
+                  className="bg-primary hover:bg-primary/90 text-white px-4 md:px-6 py-2 md:py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-primary/20 active:scale-95 flex items-center gap-2"
                 >
                   <FiPlus size={16} />
-                  List Ad
+                  <span className="hidden sm:inline">List Ad</span>
                 </Link>
                 <button 
                   onClick={() => api.post("/auth/logout").then(clearUser)}

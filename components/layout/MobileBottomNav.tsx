@@ -15,6 +15,9 @@ const navItems = [
 export default function MobileBottomNav() {
   const pathname = usePathname();
 
+  const isChatRoom = pathname?.match(/^\/chats\/[a-zA-Z0-9_-]+$/);
+  if (isChatRoom) return null;
+
   return (
     <nav className="
       fixed bottom-0 left-0 right-0 z-50

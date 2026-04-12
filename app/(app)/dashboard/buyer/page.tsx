@@ -65,14 +65,14 @@ export default function BuyerDashboard() {
   }, [userId]);
 
   return (
-    <div className="min-h-screen bg-background text-foreground selection:bg-primary/10 relative overflow-hidden font-sans">
+    <div className="min-h-screen pb-24 bg-background text-foreground selection:bg-primary/10 relative overflow-hidden font-sans">
       <div className="absolute inset-0 bg-dot-grid pointer-events-none opacity-40" />
       
       {/* Dynamic Background Washes */}
       <div className="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] bg-[hsl(var(--luxury-violet)/0.08)] rounded-full blur-[140px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-[hsl(var(--luxury-rose)/0.08)] rounded-full blur-[140px] pointer-events-none" />
 
-      <div className="max-w-[1750px] mx-auto grid grid-cols-12 gap-8 px-10 py-12 relative z-10">
+      <div className="max-w-[1750px] mx-auto grid grid-cols-12 gap-6 md:gap-8 px-4 md:px-10 py-8 md:py-12 relative z-10">
         
         {/* --- 🏰 COMPACT SIDEBAR --- */}
         <aside className="hidden lg:block lg:col-span-3">
@@ -136,7 +136,7 @@ export default function BuyerDashboard() {
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex flex-col md:flex-row items-center justify-between gap-10 bg-gradient-to-br from-card/40 to-card/10 backdrop-blur-3xl p-8 rounded-[3rem] border border-border/50 shadow-2xl relative overflow-hidden group hover:border-primary/20 transition-all duration-700"
+              className="flex flex-col md:flex-row items-center justify-between gap-6 md:gap-10 bg-gradient-to-br from-card/40 to-card/10 backdrop-blur-3xl p-6 md:p-8 rounded-[2rem] md:rounded-[3rem] border border-border/50 shadow-2xl relative overflow-hidden group hover:border-primary/20 transition-all duration-700"
             >
               <div className="relative z-10 text-center md:text-left">
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-full border border-primary/10 mb-4">
