@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -32,15 +31,18 @@ export default function PriceEstimatorPage() {
   const [error, setError] = useState("");
   const [priceHistory, setPriceHistory] = useState<any[]>([]);
 
-  const searchParams = useSearchParams();
-
   // Auto-fill from ?product= & ?mode= query params (e.g. linked from ad detail page)
   useEffect(() => {
-    const product = searchParams.get("product");
-    const modeParam = searchParams.get("mode");
-    if (product) setProductName(product);
-    if (modeParam === "buying" || modeParam === "selling") setMode(modeParam);
-  }, [searchParams]);
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      const product = sp.get("product");
+      const modeParam = sp.get("mode");
+      if (product) setProductName(product);
+      if (modeParam === "buying" || modeParam === "selling") setMode(modeParam as "buying" | "selling");
+    } catch (e) {
+      // ignore during SSR or if window not available
+    }
+  }, []);
 
   const handleEstimate = async (e: React.FormEvent) => {
     e.preventDefault();

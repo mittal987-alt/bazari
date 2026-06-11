@@ -528,7 +528,7 @@ export default function AdDetailsPage() {
                       Save {Math.round((1 - (ad.groupBuyPrice || ad.price) / ad.price) * 100)}%
                     </span>
                     <span className="text-[10px] bg-slate-200 dark:bg-slate-800 px-2.5 py-1 rounded-full font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest">
-                      {ad.groupBuyTarget - (ad.groupBuyers?.length || 0)} Slots Left
+                      {(ad.groupBuyTarget ?? 0) - (ad.groupBuyers?.length || 0)} Slots Left
                     </span>
                   </div>
 

@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useSearchParams } from "next/navigation";
+// Avoid `useSearchParams` to prevent suspense requirement during prerender
 import { motion, AnimatePresence } from "framer-motion";
 import api from "@/lib/api";
 import { 
@@ -29,7 +29,7 @@ interface SidebarInputProps {
 }
 
 function AdsPageContent() {
-  const searchParams = useSearchParams();
+  // query params handled in useEffect; avoid useSearchParams to prevent suspense issues
 
   const [ads, setAds] = useState<Ad[]>([]);
   const [loading, setLoading] = useState(false);
@@ -37,19 +37,27 @@ function AdsPageContent() {
   const [totalPages, setTotalPages] = useState(1);
 
   // Filters State initialized from URL params if present
-  const [search, setSearch] = useState(searchParams.get("search") || "");
-  const [city, setCity] = useState(searchParams.get("city") || "");
-  const [min, setMin] = useState(searchParams.get("min") || "");
-  const [max, setMax] = useState(searchParams.get("max") || "");
-  const [sort, setSort] = useState(searchParams.get("sort") || "");
-  const categoryParam = searchParams.get("category");
+  const [search, setSearch] = useState("");
+  const [city, setCity] = useState("");
+  const [min, setMin] = useState("");
+  const [max, setMax] = useState("");
+  const [sort, setSort] = useState("");
 
-  // If a category was passed directly instead of search
+  // Initialize filters from URL query params on client-side
   useEffect(() => {
-    if (categoryParam && !search) {
-      setSearch(categoryParam); // Just use it as a keyword search for maximum compatibility
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      const categoryParam = sp.get("category");
+      setSearch(sp.get("search") || "");
+      setCity(sp.get("city") || "");
+      setMin(sp.get("min") || "");
+      setMax(sp.get("max") || "");
+      setSort(sp.get("sort") || "");
+      if (categoryParam && !search) setSearch(categoryParam);
+    } catch (e) {
+      // ignore during SSR
     }
-  }, [categoryParam]);
+  }, []);
 
   const fetchAds = useCallback(async (pageNumber: number, reset = false) => {
     try {
