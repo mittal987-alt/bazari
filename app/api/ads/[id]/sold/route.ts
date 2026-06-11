@@ -1,10 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { connectDB } from "@/lib/db";
 import Ad from "@/models/Ad";
 import Chat from "@/models/Chat";
 import { getUserFromToken } from "@/lib/auth";
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const user = await getUserFromToken();
     if (!user) {
@@ -13,7 +13,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
     await connectDB();
 
-    const { id } = params;
+    const { id } = await params;
     const body = await req.json();
     const { buyerId } = body;
 
