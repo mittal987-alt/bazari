@@ -8,9 +8,14 @@ export async function GET() {
   try {
     await connectDB();
 
-    // ✅ FIX: await cookies()
     const cookieStore = await cookies();
     const token = cookieStore.get("token")?.value;
+
+    console.log("=================================");
+    console.log("TOKEN EXISTS:", !!token);
+    console.log("TOKEN:", token?.substring(0, 30));
+    console.log("JWT_SECRET EXISTS:", !!process.env.JWT_SECRET);
+    console.log("=================================");
 
     if (!token) {
       return NextResponse.json(
@@ -19,21 +24,30 @@ export async function GET() {
       );
     }
 
-    // Verify JWT
     let decoded: any;
+
     try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET!);
-    } catch {
+      decoded = jwt.verify(
+        token,
+        process.env.JWT_SECRET!
+      );
+
+      console.log("JWT VERIFIED");
+      console.log("DECODED:", decoded);
+    } catch (err) {
+      console.log("JWT VERIFY FAILED:", err);
+
       return NextResponse.json(
         { message: "Invalid token" },
         { status: 401 }
       );
     }
 
-    // Fetch user
     const user = await User.findById(decoded.id).select(
-      "_id name role"
+      "_id name email role"
     );
+
+    console.log("USER FOUND:", !!user);
 
     if (!user) {
       return NextResponse.json(
@@ -45,10 +59,12 @@ export async function GET() {
     return NextResponse.json({
       id: user._id,
       name: user.name,
+      email: user.email,
       role: user.role,
     });
   } catch (error) {
     console.error("ME API ERROR:", error);
+
     return NextResponse.json(
       { message: "Server error" },
       { status: 500 }

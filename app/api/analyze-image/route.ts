@@ -17,8 +17,9 @@ export async function POST(req: NextRequest) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    let searchQuery = "Items"; // Default fallback
+    let searchQuery = "";
     let labels: string[] = [];
+    let lastError = "";
 
     // 1. Try Google Cloud Vision if API Key is available
     const visionKey = process.env.GOOGLE_CLOUD_VISION_API_KEY;
@@ -33,16 +34,16 @@ export async function POST(req: NextRequest) {
         
         if (visionLabels && visionLabels.length > 0) {
           labels = visionLabels.map(label => label.description || "");
-          // Use the most confident label that isn't too generic if possible, or just the top label.
           searchQuery = labels[0]; 
         }
-      } catch (visionErr) {
+      } catch (visionErr: any) {
         console.error("Vision API Error:", visionErr);
+        lastError = visionErr.message || "Vision API failed";
       }
     }
 
     // 2. Fallback to Gemini if Vision failed or no labels found
-    if (labels.length === 0 && process.env.GEMINI_API_KEY) {
+    if (!searchQuery && process.env.GEMINI_API_KEY) {
       try {
         const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
         const base64Data = buffer.toString("base64");
@@ -70,17 +71,25 @@ export async function POST(req: NextRequest) {
         const outputText = response.text || "";
         const cleaned = outputText.trim();
         if (cleaned && cleaned.length < 50) {
-          searchQuery = cleaned.replace(/['"]/g, ''); // strip any quotes AI might add
+          searchQuery = cleaned.replace(/['"]/g, ''); 
         }
-      } catch (geminiErr) {
+      } catch (geminiErr: any) {
         console.error("Gemini AI Error:", geminiErr);
+        lastError = geminiErr.message || "Gemini API failed";
       }
+    }
+
+    if (!searchQuery) {
+       return NextResponse.json({
+         success: false,
+         message: "Image analysis failed. " + (lastError || "Make sure billing is enabled for Google Cloud Vision, or provide a GEMINI_API_KEY in .env.local")
+       }, { status: 400 });
     }
 
     return NextResponse.json({
       success: true,
       searchQuery: searchQuery,
-      labels: labels.slice(0, 5), // Return top 5 labels for UI if needed
+      labels: labels.slice(0, 5),
       message: labels.length > 0 ? "Analyzed with Google Cloud Vision" : "Analyzed with Gemini AI",
     });
 

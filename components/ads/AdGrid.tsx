@@ -85,7 +85,6 @@ export default function AdGrid({
       url = "/ads/nearby";
       params.lat = location.lat;
       params.lng = location.lng;
-
       if (category && category !== "all") {
         params.category = category;
       }
@@ -99,10 +98,17 @@ export default function AdGrid({
     // ✅ trending
     else if (type === "trending") {
       params.sort = "trending";
+      if (category && category !== "all") {
+        params.category = category;
+      }
     }
 
-    // 🔍 DEBUG (optional)
-    console.log("API CALL:", url, params);
+    // ✅ default /ads — apply category filter here too
+    else {
+      if (category && category !== "all") {
+        params.category = category;
+      }
+    }
 
     api
       .get(url, { params })

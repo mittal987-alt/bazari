@@ -29,6 +29,8 @@ export default function PremiumChatRoom() {
   const [text, setText] = useState("");
   const [isOtherTyping, setIsOtherTyping] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [negOptions, setNegOptions] = useState<any[]>([]);
+  const [loadingNeg, setLoadingNeg] = useState(false);
 
   const { user } = useUserStore();
   const userId = user?.id;
@@ -74,6 +76,37 @@ export default function PremiumChatRoom() {
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isOtherTyping]);
+
+  // --- FETCH NEGOTIATION OPTIONS ---
+  useEffect(() => {
+    const ad = chatMeta?.adId;
+    if (!ad) return;
+
+    const fetchNegOptions = async () => {
+      try {
+        setLoadingNeg(true);
+        const res = await fetch("/api/ai/negotiate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            productName: ad.title,
+            originalPrice: ad.price,
+            description: ad.description || "",
+          }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          setNegOptions(data.options || []);
+        }
+      } catch (err) {
+        console.warn("Failed to fetch negotiation options", err);
+      } finally {
+        setLoadingNeg(false);
+      }
+    };
+
+    fetchNegOptions();
+  }, [chatMeta?.adId?.title, chatMeta?.adId?.price]);
 
   // --- TYPING LOGIC ---
   const handleInputChange = (val: string) => {
@@ -216,7 +249,24 @@ export default function PremiumChatRoom() {
       </main>
 
       {/* INPUT SECTION */}
-      <div className="bg-white/80 backdrop-blur-xl border-t border-slate-200 p-4 pb-8">
+      <div className="bg-white/80 backdrop-blur-xl border-t border-slate-200 p-4 pb-8 space-y-4">
+        {/* Counter Offer Helper */}
+        {ad && negOptions.length > 0 && (
+          <div className="max-w-4xl mx-auto flex flex-wrap items-center gap-2">
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 mr-2 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span> AI Counter Offers:
+            </span>
+            {negOptions.map((opt, i) => (
+              <button
+                key={i}
+                onClick={() => handleInputChange(opt.text)}
+                className="px-3.5 py-1.5 bg-slate-100 hover:bg-blue-600 hover:text-white border border-slate-200 hover:border-blue-600 rounded-full transition-all duration-300 font-bold text-[10px] text-slate-600 uppercase tracking-wider"
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        )}
         <div className="max-w-4xl mx-auto relative flex items-center gap-3">
           <div className="flex-1 relative">
             <input

@@ -9,7 +9,7 @@ import api from "@/lib/api";
 import { useUserStore } from "@/store/userStore"; 
 import { 
   FiMapPin, FiClock, FiHeart, FiMessageSquare, 
-  FiShare2, FiChevronLeft, FiChevronRight, FiShield, FiNavigation, FiCheck, FiZap, FiLoader
+  FiShare2, FiChevronLeft, FiChevronRight, FiShield, FiNavigation, FiCheck, FiZap, FiLoader, FiTrendingUp
 } from "react-icons/fi";
 
 type Ad = {
@@ -27,6 +27,11 @@ type Ad = {
   groupBuyTarget?: number;
   groupBuyPrice?: number;
   groupBuyers?: string[];
+  fraudCheck?: {
+    score: number;
+    status: "active" | "pending" | "spam";
+    reasons: string[];
+  };
 };
 
 export default function AdDetailsPage() {
@@ -43,6 +48,7 @@ export default function AdDetailsPage() {
   const [joiningGroupBuy, setJoiningGroupBuy] = useState(false);
   const [pricingInsight, setPricingInsight] = useState<{ discountPercent: number; explanation: string } | null>(null);
   const [loadingInsight, setLoadingInsight] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
 
   useEffect(() => {
     const fetchAd = async () => {
@@ -273,6 +279,16 @@ export default function AdDetailsPage() {
             <p className="text-5xl font-black text-blue-600 tracking-tighter pt-2">
               ₹{ad.price.toLocaleString("en-IN")}
             </p>
+
+            {/* ── Price Estimator CTA ── */}
+            <Link
+              href={`/price-estimator?product=${encodeURIComponent(ad.title)}&mode=buying`}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-50 border border-indigo-100 hover:bg-indigo-100 hover:border-indigo-300 text-indigo-700 transition-all group w-fit"
+            >
+              <FiTrendingUp size={15} className="text-indigo-500 group-hover:scale-110 transition-transform" />
+              <span className="text-xs font-bold">Is this a fair price?</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-indigo-400 group-hover:text-indigo-600 transition-colors">Check with AI Estimator →</span>
+            </Link>
           </div>
 
           {ad.isGroupBuy && ad.groupBuyTarget && (
@@ -341,6 +357,13 @@ export default function AdDetailsPage() {
                   {joiningGroupBuy ? "Joining..." : hasJoined ? "You've Joined!" : "Join Group Buy"}
                 </span>
               </button>
+
+              <button
+                onClick={() => setShowInviteModal(true)}
+                className="mt-3 w-full py-4 rounded-xl font-black text-[11px] uppercase tracking-widest bg-white hover:bg-slate-50 border border-purple-200 text-purple-600 shadow-sm transition-all flex items-center justify-center gap-2 active:scale-95"
+              >
+                <FiShare2 /> Invite Friends to Save
+              </button>
             </div>
           )}
 
@@ -402,17 +425,151 @@ export default function AdDetailsPage() {
             <p className="text-slate-600 leading-relaxed font-medium">{ad.description}</p>
           </div>
 
-          <div className="bg-blue-50/50 p-6 rounded-[2rem] border border-blue-100 flex gap-4">
-            <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-blue-600 shadow-sm shrink-0">
-              <FiShield size={24} />
+          <div className={`p-6 rounded-[2rem] border flex flex-col gap-4 ${
+            !ad.fraudCheck || ad.fraudCheck.score < 5
+              ? "bg-emerald-50/60 border-emerald-100" 
+              : ad.fraudCheck.score < 7
+                ? "bg-amber-50/60 border-amber-100"
+                : "bg-rose-50/60 border-rose-100"
+          }`}>
+            <div className="flex gap-4">
+              <div className={`w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm shrink-0 ${
+                !ad.fraudCheck || ad.fraudCheck.score < 5
+                  ? "text-emerald-500" 
+                  : ad.fraudCheck.score < 7
+                    ? "text-amber-500"
+                    : "text-rose-500"
+              }`}>
+                <FiShield size={24} />
+              </div>
+              <div className="space-y-1">
+                <h4 className={`font-black text-xs uppercase tracking-widest ${
+                  !ad.fraudCheck || ad.fraudCheck.score < 5
+                    ? "text-emerald-900" 
+                    : ad.fraudCheck.score < 7
+                      ? "text-amber-900"
+                      : "text-rose-900"
+                }`}>
+                  {!ad.fraudCheck || ad.fraudCheck.score < 5
+                    ? "Bazaari Shield: High Trust" 
+                    : ad.fraudCheck.score < 7
+                      ? "Bazaari Shield: Moderate Trust"
+                      : "Bazaari Shield: Security Warning"
+                  }
+                </h4>
+                <p className="text-[10px] font-bold text-slate-500 leading-relaxed uppercase tracking-wider">
+                  {!ad.fraudCheck || ad.fraudCheck.score < 5
+                    ? "Safe listing. Matches all standard security parameters." 
+                    : ad.fraudCheck.score < 7
+                      ? "Some anomalies detected. Keep interactions strictly inside the platform."
+                      : "Aggressive spam keywords or off-platform payment signals found."
+                  }
+                </p>
+              </div>
             </div>
-            <div>
-              <h4 className="font-black text-xs uppercase tracking-widest text-blue-900">Bazaari Shield</h4>
-              <p className="text-[10px] font-bold text-blue-700/70 mt-1">Never pay in advance. Inspect items in person.</p>
-            </div>
+
+            {ad.fraudCheck && ad.fraudCheck.reasons && ad.fraudCheck.reasons.length > 0 && (
+              <div className="mt-2 pt-4 border-t border-dashed border-slate-200/60 space-y-2">
+                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">AI Risk Indicators:</p>
+                <ul className="space-y-1.5">
+                  {ad.fraudCheck.reasons.map((reason, idx) => (
+                    <li key={idx} className="text-[10px] font-medium text-slate-600 flex items-start gap-2">
+                      <span className={`w-1.5 h-1.5 rounded-full shrink-0 mt-1.5 ${ad.fraudCheck!.score < 7 ? "bg-amber-400" : "bg-rose-400"}`}></span>
+                      {reason}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Invite Modal */}
+      <AnimatePresence>
+        {showInviteModal && (
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white dark:bg-slate-950 rounded-[2.5rem] w-full max-w-md overflow-hidden border border-slate-200 dark:border-slate-800 shadow-2xl relative text-slate-900 dark:text-white"
+            >
+              {/* Neon Accent Header */}
+              <div className="h-2 w-full bg-gradient-to-r from-[hsl(var(--luxury-violet))] to-[hsl(var(--luxury-rose))]" />
+              
+              <div className="p-8 space-y-6">
+                <div className="text-center space-y-1">
+                  <h3 className="text-xl font-black tracking-tight uppercase">Co-Buy Invite Ticket</h3>
+                  <p className="text-[9px] font-black tracking-widest text-slate-400 uppercase">Save Together on Bazaari</p>
+                </div>
+
+                {/* Styled Ticket graphic card */}
+                <div className="bg-slate-50 dark:bg-slate-905/40 p-6 rounded-[2rem] border border-slate-200/60 dark:border-slate-800/60 relative overflow-hidden flex flex-col items-center text-center shadow-inner">
+                  {/* Left Notch */}
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-3 w-6 h-6 rounded-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800" />
+                  {/* Right Notch */}
+                  <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-3 w-6 h-6 rounded-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800" />
+                  
+                  {/* Image */}
+                  <div className="w-24 h-24 relative rounded-2xl overflow-hidden border-2 border-white dark:border-slate-800 shadow-md mb-4 bg-white">
+                    <Image
+                      src={ad.images?.[0] || "/placeholder.png"}
+                      alt={ad.title}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+
+                  <h4 className="font-black text-sm uppercase tracking-tight max-w-[220px] truncate">{ad.title}</h4>
+                  
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="text-[10px] bg-purple-100 dark:bg-purple-900/30 px-2.5 py-1 rounded-full font-black text-purple-600 uppercase tracking-widest">
+                      Save {Math.round((1 - (ad.groupBuyPrice || ad.price) / ad.price) * 100)}%
+                    </span>
+                    <span className="text-[10px] bg-slate-200 dark:bg-slate-800 px-2.5 py-1 rounded-full font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest">
+                      {ad.groupBuyTarget - (ad.groupBuyers?.length || 0)} Slots Left
+                    </span>
+                  </div>
+
+                  {/* Dashed Separator Line */}
+                  <div className="w-full border-t border-dashed border-slate-300 dark:border-slate-700 my-4" />
+
+                  <div className="flex justify-between w-full px-2 text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                    <div className="text-left">
+                      <p>Deal Price</p>
+                      <p className="text-purple-600 text-sm mt-0.5">₹{ad.groupBuyPrice?.toLocaleString()}</p>
+                    </div>
+                    <div className="text-right">
+                      <p>Retail Value</p>
+                      <p className="line-through text-sm mt-0.5">₹{ad.price.toLocaleString()}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <button
+                    onClick={() => {
+                      const shareText = `Hey! I joined a Group Buy for "${ad.title}" on Bazaari. If we get ${ad.groupBuyTarget} people to join, we get it for only ₹${ad.groupBuyPrice?.toLocaleString()} (normally ₹${ad.price.toLocaleString()})! Join my group deal here: ${window.location.href}`;
+                      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`, "_blank");
+                    }}
+                    className="w-full py-4 rounded-xl font-black text-[11px] uppercase tracking-widest bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-500/20 transition-all flex items-center justify-center gap-2 active:scale-95"
+                  >
+                    Share on WhatsApp
+                  </button>
+
+                  <button
+                    onClick={() => setShowInviteModal(false)}
+                    className="w-full py-4 rounded-xl font-black text-[11px] uppercase tracking-widest bg-slate-100 hover:bg-slate-200 text-slate-600 dark:text-slate-300 dark:bg-slate-800 transition-all active:scale-95"
+                  >
+                    Close Ticket
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

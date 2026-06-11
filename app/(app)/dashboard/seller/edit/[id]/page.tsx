@@ -63,7 +63,6 @@ export default function EditAdPage() {
     if (id) fetchAd();
   }, [id]);
 
-  // --- IMAGE UPLOAD LOGIC ---
   const handleImageUpload = async (files: FileList) => {
     setUploading(true);
     try {
@@ -72,10 +71,20 @@ export default function EditAdPage() {
         formData.append("file", file);
       });
 
-      const res = await api.post("/upload", formData);
-      setImages((prev) => [...prev, res.data.url]);
-    } catch (err) {
-      alert("Image upload failed");
+      // Use native fetch — Axios can corrupt the multipart boundary on FormData
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || "Upload failed");
+      }
+      const data = await res.json();
+      setImages((prev) => [...prev, ...data.urls]);
+    } catch (err: any) {
+      alert(err.message || "Image upload failed");
     } finally {
       setUploading(false);
     }

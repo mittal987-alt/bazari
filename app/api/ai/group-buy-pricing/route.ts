@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { GoogleGenAI } from "@google/genai";
 
 export const runtime = "nodejs";
 
@@ -10,52 +11,37 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "Product details are required" }, { status: 400 });
     }
 
-    const apiKey = process.env.API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_CLOUD_VISION_API_KEY;
     if (!apiKey) {
       return NextResponse.json({ message: "AI API Key is missing" }, { status: 500 });
     }
+    console.log("[group-buy-pricing] Using API key prefix:", apiKey.slice(0, 8));
 
-    // Call xAI (Grok) API with the user's specific prompt
-    const aiResponse = await fetch("https://api.x.ai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model: "grok-2",
-        messages: [
-          {
-            role: "system",
-            content: "You are an AI pricing assistant for a group buying feature in a marketplace. Your goal is to calculate fair discounts that maintain seller profit but feel attractive to buyers."
-          },
-          {
-            role: "user",
-            content: `Product: ${productName}\nOriginal Price: ₹${originalPrice}\nNumber of Buyers Joined: ${buyersCount || 0}\n\nRules:\n- More buyers = better discount\n- Maintain seller profit margin\n- Discounts should feel attractive but realistic\n\nYour task:\n1. Calculate a fair discounted price based on number of buyers.\n2. Explain the discount logic briefly.\n3. Encourage more users to join the group.\n\nOutput format ONLY as valid JSON with these keys: "newPrice", "discountPercent", "explanation". Do not include any other text.`
-          }
-        ],
-        temperature: 0.7,
-      })
-    });
+    let aiData;
+    try {
+      const ai = new GoogleGenAI({ apiKey });
+      const systemInstruction = "You are an AI pricing assistant for a group buying feature in a marketplace. Your goal is to calculate fair discounts that maintain seller profit but feel attractive to buyers.";
+      const userMessage = `Product: ${productName}\nOriginal Price: ₹${originalPrice}\nNumber of Buyers Joined: ${buyersCount || 0}\n\nRules:\n- More buyers = better discount\n- Maintain seller profit margin\n- Discounts should feel attractive but realistic\n\nYour task:\n1. Calculate a fair discounted price based on number of buyers.\n2. Explain the discount logic briefly.\n3. Encourage more users to join the group.\n\nOutput format ONLY as valid JSON with these keys: "newPrice", "discountPercent", "explanation". Do not include any other text.`;
 
-    if (!aiResponse.ok) {
-      const errorText = await aiResponse.text();
-      console.error("xAI API Error Response:", aiResponse.status, errorText);
-      let errorMessage = "AI API call failed";
-      try {
-        const errorData = JSON.parse(errorText);
-        errorMessage = errorData.error?.message || errorData.message || errorMessage;
-      } catch {}
-      throw new Error(errorMessage);
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: userMessage,
+        config: {
+          systemInstruction,
+          temperature: 0.7,
+          responseMimeType: "application/json",
+        }
+      });
+      aiData = response.text ? response.text.trim() : "{}";
+    } catch (err: any) {
+      console.error("Gemini API Error Response:", err);
+      throw new Error(err.message || "AI API call failed");
     }
-
-    const aiData = await aiResponse.json();
     let result = { newPrice: originalPrice, discountPercent: 0, explanation: "" };
     
     try {
-      const content = aiData.choices[0].message.content.trim();
       // Remove markdown code blocks if present
-      const jsonString = content.replace(/^```json\n?/, "").replace(/\n?```$/, "");
+      const jsonString = aiData.replace(/^```json\n?/, "").replace(/\n?```$/, "");
       result = JSON.parse(jsonString);
     } catch (e) {
       console.error("AI JSON Parse Error:", e);

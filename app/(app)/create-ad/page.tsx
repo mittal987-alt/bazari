@@ -26,9 +26,6 @@ export default function CreateAdPage() {
     yearsUsed: "",
     lat: null as number | null,
     lng: null as number | null,
-    isGroupBuy: false,
-    groupBuyTarget: "",
-    groupBuyPrice: "",
   });
 
   const [images, setImages] = useState<string[]>([]);
@@ -36,7 +33,6 @@ export default function CreateAdPage() {
   const [uploading, setUploading] = useState(false);
   const [locating, setLocating] = useState(false);
   const [generating, setGenerating] = useState(false);
-  const [suggesting, setSuggesting] = useState(false);
 
   // --- 📍 GEOLOCATION ---
   const getDeviceLocation = () => {
@@ -84,10 +80,20 @@ export default function CreateAdPage() {
     try {
       const formData = new FormData();
       Array.from(files).forEach((file) => formData.append("file", file));
-      const res = await api.post("/upload", formData);
-      setImages((prev) => [...prev, ...res.data.urls]);
-    } catch {
-      alert("Upload failed");
+      // Use native fetch — Axios can corrupt the multipart boundary on FormData
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+        credentials: "include", // Ensure cookies/tokens are sent
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || "Upload failed");
+      }
+      const data = await res.json();
+      setImages((prev) => [...prev, ...data.urls]);
+    } catch (err: any) {
+      alert(err.message || "Upload failed");
     } finally {
       setUploading(false);
     }
@@ -120,38 +126,6 @@ export default function CreateAdPage() {
     }
   };
 
-  const handleSuggestPricing = async () => {
-    if (!form.title || !form.price) {
-      alert("Please enter title and original price first.");
-      return;
-    }
-
-    setSuggesting(true);
-    try {
-      const res = await fetch("/api/ai/group-buy-pricing", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productName: form.title, originalPrice: Number(form.price), buyersCount: 5 }), // Simulating target of 5
-      });
-      const data = await res.json();
-      if (res.ok && data.pricing) {
-        setForm(prev => ({ 
-          ...prev, 
-          groupBuyPrice: data.pricing.newPrice, 
-          groupBuyTarget: "5" // Defaulting to 5 for now
-        }));
-        alert(`AI Suggestion Applied: ${data.pricing.explanation}`);
-      } else {
-        alert(data.message || "Failed to get AI suggestion");
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Error getting AI suggestion");
-    } finally {
-      setSuggesting(false);
-    }
-  };
-
   // --- 🚀 SUBMIT LOGIC ---
   const handleSubmit = async () => {
     // Matches Backend Requirement: !title || !price || !location || !category || !lat || !lng || !userId
@@ -173,17 +147,12 @@ export default function CreateAdPage() {
       await api.post("/ads", {
         title: form.title,
         price: Number(form.price),
-        location: form.location, // String name (locationName in DB)
+        location: form.location,
         category: form.category,
         images: images,
         userId: user?.id,
         lat: form.lat,
         lng: form.lng,
-        // Group Buying
-        isGroupBuy: form.isGroupBuy,
-        groupBuyTarget: Number(form.groupBuyTarget) || 0,
-        groupBuyPrice: Number(form.groupBuyPrice) || 0,
-        // Optional fields your model might have
         description: form.description,
         yearsUsed: Number(form.yearsUsed) || 0,
       });
@@ -199,35 +168,39 @@ export default function CreateAdPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFDFD] text-slate-900 pb-20">
-      
+    <div className="min-h-screen bg-background text-foreground font-sans overflow-x-hidden pb-24">
+       {/* ambient blobs */}
+       <div className="hidden sm:block absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-[hsl(var(--luxury-violet)/0.05)] rounded-full blur-[140px] pointer-events-none -z-0" />
+       <div className="hidden sm:block absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] bg-[hsl(var(--luxury-rose)/0.05)] rounded-full blur-[140px] pointer-events-none -z-0" />
+       <div className="absolute inset-0 bg-dot-grid opacity-20 pointer-events-none -z-0" />
+
       {/* HEADER */}
-      <div className="max-w-7xl mx-auto px-8 py-10 flex items-center justify-between">
-        <Link href="/dashboard/seller" className="group flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-blue-600 transition-colors">
-          <FiArrowLeft className="group-hover:-translate-x-1 transition-transform" /> Exit Studio
+      <div className="relative z-10 max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-10 pt-6 pb-4 sm:py-10 flex items-center justify-between">
+        <Link href="/dashboard/seller" className="group flex items-center gap-2 text-[10px] sm:text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors">
+          <FiArrowLeft className="group-hover:-translate-x-1 transition-transform" /> <span className="hidden sm:inline">Exit Studio</span>
         </Link>
-        <div className="text-center">
-            <h1 className="text-3xl font-black tracking-tighter italic">Studio<span className="text-blue-600">.</span></h1>
-            <p className="text-[10px] font-black uppercase text-slate-400 tracking-[0.3em]">New Listing Creation</p>
+        <div className="text-center absolute left-1/2 -translate-x-1/2">
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tighter italic">Studio<span className="text-primary">.</span></h1>
+            <p className="text-[8px] sm:text-[10px] font-black uppercase text-muted-foreground tracking-[0.3em]">New Listing</p>
         </div>
-        <div className="w-20"></div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-8 grid grid-cols-1 lg:grid-cols-12 gap-16">
+      <div className="relative z-10 max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-10 grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-16">
         
         {/* FORM SECTION */}
-        <div className="lg:col-span-7 space-y-12">
+        <div className="lg:col-span-7 space-y-8 sm:space-y-12">
+          
           <section className="space-y-6">
-            <div className="flex items-center gap-3 mb-8">
-               <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center font-bold">01</div>
-               <h2 className="text-xl font-black tracking-tight">Essential Details</h2>
+            <div className="flex items-center gap-3 mb-6 sm:mb-8">
+               <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center font-bold shadow-sm border border-primary/20 shrink-0">01</div>
+               <h2 className="text-lg sm:text-xl font-black tracking-tight text-foreground">Essential Details</h2>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               <PremiumInput label="Listing Title" placeholder="e.g. iPhone 15 Pro Max" value={form.title} onChange={(v: string) => setForm({...form, title: v})} icon={<FiTag />} />
               <PremiumInput label="Price (₹)" type="number" placeholder="0.00" value={form.price} onChange={(v: string) => setForm({...form, price: v})} icon={<span className="font-bold text-xs">₹</span>} />
               
-              <div className="relative">
+              <div className="relative group">
                 <PremiumInput 
                     label="Location Name" 
                     placeholder="Delhi, Mumbai..." 
@@ -239,121 +212,87 @@ export default function CreateAdPage() {
                     onClick={getDeviceLocation}
                     type="button"
                     disabled={locating}
-                    className={`absolute right-4 bottom-4 text-[9px] font-black uppercase tracking-tighter flex items-center gap-1 transition-colors ${
-                      form.lat ? "text-emerald-600" : "text-blue-600"
-                    }`}
+                    className={`absolute right-4 bottom-3 sm:bottom-4 text-[9px] font-black uppercase tracking-tighter flex items-center gap-1 transition-colors ${
+                      form.lat ? "text-emerald-500" : "text-primary"
+                    } hover:scale-105 active:scale-95 bg-card/80 backdrop-blur-sm px-2 py-1 rounded-md border border-border/50`}
                 >
                     {locating ? <FiLoader className="animate-spin" /> : form.lat ? <FiCheck /> : <FiMapPin />}
-                    {locating ? "Locating…" : form.lat ? "Location Detected" : "Get GPS"}
+                    {locating ? "Locating…" : form.lat ? "Detected" : "Get GPS"}
                 </button>
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">Category</label>
+                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2 sm:ml-4">Category</label>
                 <div className="relative">
-                  <FiGrid className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <FiGrid className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
                   <select 
                     value={form.category} 
                     onChange={(e) => setForm({...form, category: e.target.value})}
-                    className="w-full pl-12 pr-6 py-4 rounded-2xl bg-white border border-slate-100 shadow-sm outline-none focus:ring-4 focus:ring-blue-500/5 transition-all appearance-none font-bold"
+                    className="w-full pl-10 sm:pl-12 pr-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl bg-card border border-border shadow-sm outline-none focus:ring-2 focus:ring-primary/50 transition-all appearance-none font-semibold text-sm text-foreground"
                   >
                     <option value="">Select Category</option>
                     <option value="Electronics">Electronics</option>
                     <option value="Vehicles">Vehicles</option>
                     <option value="Property">Property</option>
+                    <option value="Fashion">Fashion</option>
+                    <option value="Furniture">Furniture</option>
+                    <option value="Fitness">Fitness</option>
                   </select>
                 </div>
               </div>
 
               <div className="md:col-span-2 space-y-2">
-                <div className="flex items-center justify-between ml-4">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Description</label>
+                <div className="flex flex-wrap items-center justify-between ml-2 sm:ml-4 gap-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Description</label>
                   <button 
                     type="button"
                     onClick={handleGenerateDescription}
                     disabled={generating || !form.title}
-                    className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-blue-600 hover:text-blue-700 disabled:opacity-30 transition-all hover:scale-105"
+                    className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-primary disabled:opacity-50 transition-all hover:-translate-y-0.5 bg-primary/10 px-3 py-1 rounded-full border border-primary/20"
                   >
                     {generating ? <FiLoader className="animate-spin" /> : <FiZap className="fill-current" />}
-                    {generating ? "Generating..." : "Magic Generate"}
+                    {generating ? "Generating..." : "AI Generate"}
                   </button>
                 </div>
                 <textarea 
                   placeholder="Tell buyers more about your product..." 
                   value={form.description} 
                   onChange={(e) => setForm({...form, description: e.target.value})}
-                  className="w-full px-6 py-4 rounded-2xl bg-white border border-slate-100 shadow-sm outline-none focus:ring-4 focus:ring-blue-500/5 transition-all font-bold min-h-[160px] resize-none placeholder:font-medium placeholder:text-slate-300"
+                  className="w-full px-5 py-4 rounded-xl sm:rounded-2xl bg-card border border-border shadow-sm outline-none focus:ring-2 focus:ring-primary/50 transition-all font-medium text-sm min-h-[120px] sm:min-h-[160px] resize-none placeholder:text-muted-foreground/40 text-foreground"
                 />
               </div>
             </div>
           </section>
 
-          {/* GROUP BUY SECTION */}
-          <section className="space-y-6">
-            <div className="flex items-center gap-3 mb-8">
-               <div className="w-10 h-10 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center font-bold">02</div>
-               <h2 className="text-xl font-black tracking-tight">Group Buying (Optional)</h2>
-            </div>
-            <div className="p-6 border border-slate-100 rounded-[2rem] bg-white shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between mb-4">
-                <label className="flex items-center gap-3 cursor-pointer select-none">
-                  <input 
-                    type="checkbox" 
-                    checked={form.isGroupBuy} 
-                    onChange={e => setForm({...form, isGroupBuy: e.target.checked})} 
-                    className="w-5 h-5 accent-purple-600 rounded bg-slate-100 border-none outline-none focus:ring-0" 
-                  />
-                  <span className="font-bold text-slate-800">Enable Group Buying Mode</span>
-                </label>
-                {form.isGroupBuy && (
-                  <button 
-                    type="button"
-                    onClick={handleSuggestPricing}
-                    disabled={suggesting || !form.price}
-                    className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-purple-600 hover:text-purple-700 disabled:opacity-30 transition-all hover:scale-105"
-                  >
-                    {suggesting ? <FiLoader className="animate-spin" /> : <FiZap className="fill-current" />}
-                    {suggesting ? "Analyzing..." : "AI Suggest Price"}
-                  </button>
-                )}
-              </div>
-
-              {form.isGroupBuy && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 mt-6 border-t border-slate-50">
-                  <PremiumInput label="Target Buyers" type="number" placeholder="5" value={form.groupBuyTarget} onChange={(v: string) => setForm({...form, groupBuyTarget: v})} icon={<FiGrid />} />
-                  <PremiumInput label="Discounted Price (₹)" type="number" placeholder="0.00" value={form.groupBuyPrice} onChange={(v: string) => setForm({...form, groupBuyPrice: v})} icon={<span className="font-bold text-xs">₹</span>} />
-                </div>
-              )}
-            </div>
-          </section>
-
           {/* MEDIA */}
           <section className="space-y-6">
-            <div className="flex items-center gap-3 mb-8">
-               <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center font-bold">03</div>
-               <h2 className="text-xl font-black tracking-tight">Gallery & Visuals</h2>
+            <div className="flex items-center gap-3 mb-6 sm:mb-8">
+               <div className="w-8 h-8 sm:w-10 sm:h-10 bg-emerald-500/10 text-emerald-500 rounded-xl flex items-center justify-center font-bold shadow-sm border border-emerald-500/20 shrink-0">02</div>
+               <h2 className="text-lg sm:text-xl font-black tracking-tight text-foreground">Gallery & Visuals</h2>
             </div>
 
-            <div className="relative group border-2 border-dashed border-slate-200 rounded-[2.5rem] p-12 transition-all hover:border-blue-400 hover:bg-blue-50/30">
+            <div className="relative group border-2 border-dashed border-border rounded-[1.5rem] sm:rounded-[2.5rem] p-8 sm:p-12 transition-all hover:border-primary hover:bg-primary/5 cursor-pointer bg-card/50 backdrop-blur-sm">
               <input 
                 type="file" multiple accept="image/*" 
                 onChange={(e) => e.target.files && handleImageUpload(e.target.files)}
-                className="absolute inset-0 opacity-0 cursor-pointer"
+                className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                disabled={uploading}
               />
               <div className="flex flex-col items-center text-center">
-                <div className="w-16 h-16 bg-white rounded-2xl shadow-xl flex items-center justify-center text-blue-600 mb-4 group-hover:scale-110 transition-transform">
-                   <FiCamera size={24} />
+                <div className={`w-14 h-14 sm:w-16 sm:h-16 bg-card rounded-2xl shadow-md flex items-center justify-center text-primary mb-3 sm:mb-4 transition-transform border border-border ${uploading ? 'animate-pulse' : 'group-hover:scale-110'}`}>
+                   {uploading ? <FiLoader className="animate-spin" size={24} /> : <FiCamera size={24} />}
                 </div>
-                <p className="font-black text-slate-900 uppercase text-[10px] tracking-widest">Click or Drag to Upload</p>
+                <p className="font-black text-foreground uppercase text-[9px] sm:text-[10px] tracking-widest">{uploading ? 'Uploading...' : 'Click or Drag to Upload'}</p>
+                <p className="text-[10px] text-muted-foreground mt-1">Up to 5MB per image</p>
               </div>
             </div>
 
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
               <AnimatePresence>
                 {images.map((img, i) => (
-                  <motion.div key={i} layout initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative aspect-square rounded-2xl overflow-hidden group">
+                  <motion.div key={i} layout initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative aspect-square rounded-xl sm:rounded-2xl overflow-hidden group border border-border shadow-sm">
                     <Image src={img} fill className="object-cover" alt="" />
-                    <button onClick={() => setImages(images.filter((_, idx) => idx !== i))} className="absolute top-2 right-2 p-1 bg-white rounded-full text-rose-500 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={() => setImages(images.filter((_, idx) => idx !== i))} className="absolute top-2 right-2 w-6 h-6 sm:w-7 sm:h-7 bg-background/90 backdrop-blur-sm flex items-center justify-center rounded-full text-destructive shadow-md opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-white">
                       <FiX size={14} />
                     </button>
                   </motion.div>
@@ -365,24 +304,29 @@ export default function CreateAdPage() {
 
         {/* PREVIEW */}
         <div className="lg:col-span-5">
-            <div className="sticky top-10 space-y-8">
-              <div className="bg-slate-900 rounded-[3rem] p-10 text-white overflow-hidden relative">
-                 <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600 blur-[80px] opacity-40"></div>
-                 <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-400 mb-10">Live Marketplace Preview</h3>
+            <div className="sticky top-10 space-y-6 sm:space-y-8">
+              {/* Preview Card */}
+              <div className="bg-card rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 text-foreground overflow-hidden relative border border-border shadow-xl">
+                 <div className="absolute top-0 right-0 w-32 h-32 bg-primary blur-[80px] opacity-20"></div>
+                 <h3 className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-6 sm:mb-10 text-center sm:text-left">Live Marketplace Preview</h3>
                  
-                 <div className="bg-white rounded-[2rem] p-4 text-slate-900 shadow-2xl">
-                    <div className="aspect-[4/3] bg-slate-100 rounded-2xl overflow-hidden mb-4 relative">
-                       {images[0] ? <Image src={images[0]} fill className="object-cover" alt="Product preview" /> : <div className="w-full h-full flex items-center justify-center text-slate-300"><FiCamera size={32} /></div>}
-                       <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-md p-2 rounded-full text-rose-500 shadow-sm"><FiHeart fill="currentColor" size={12}/></div>
+                 <div className="bg-background rounded-2xl sm:rounded-[2rem] p-3 sm:p-4 shadow-md border border-border/50 group">
+                    <div className="aspect-[4/3] bg-muted rounded-xl sm:rounded-2xl overflow-hidden mb-3 sm:mb-4 relative border border-border/50">
+                       {images[0] ? <Image src={images[0]} fill className="object-cover transition-transform duration-700 group-hover:scale-105" alt="Product preview" /> : <div className="w-full h-full flex items-center justify-center text-muted-foreground/30 bg-card/50"><FiCamera size={32} /></div>}
+                       <div className="absolute top-3 right-3 bg-background/80 backdrop-blur-md w-8 h-8 flex items-center justify-center rounded-full text-rose-500 shadow-sm border border-border/50"><FiHeart fill="none" stroke="currentColor" size={14}/></div>
                     </div>
-                    <div className="px-1 space-y-1">
-                       <p className="text-2xl font-black tracking-tighter">
-                         ₹{form.isGroupBuy && form.groupBuyPrice ? form.groupBuyPrice : (form.price || "0")}
-                         {form.isGroupBuy && <span className="text-[12px] ml-2 font-bold text-purple-400 align-middle">Group Price</span>}
+                    <div className="px-1 sm:px-2 space-y-1">
+                       <p className="text-xl sm:text-2xl font-black tracking-tighter text-foreground">
+                         ₹{form.price ? Number(form.price).toLocaleString() : "0"}
                        </p>
-                       <h4 className="font-bold text-lg truncate">{form.title || "Untitled Product"}</h4>
-                       <div className="flex items-center gap-2 text-[10px] font-black uppercase text-slate-400 tracking-widest pt-2">
-                          <FiMapPin className="text-blue-600" /> {form.location || "Location Unknown"}
+                       <h4 className="font-bold text-sm sm:text-lg truncate text-foreground/90">{form.title || "Untitled Product"}</h4>
+                       <div className="flex items-center justify-between pt-2 mt-2 border-t border-border/50">
+                          <div className="flex items-center gap-1.5 text-[9px] sm:text-[10px] font-black uppercase text-muted-foreground tracking-widest">
+                            <FiMapPin className="text-primary" /> <span className="truncate max-w-[120px]">{form.location || "Location"}</span>
+                          </div>
+                          <div className="text-[9px] sm:text-[10px] font-black text-muted-foreground/50 uppercase tracking-tighter">
+                             Just Now
+                          </div>
                        </div>
                     </div>
                  </div>
@@ -390,16 +334,19 @@ export default function CreateAdPage() {
                  <button 
                     onClick={handleSubmit} 
                     disabled={loading || uploading || locating}
-                    className="w-full mt-10 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 py-5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-blue-900 transition-all flex items-center justify-center gap-3"
+                    className="w-full mt-8 sm:mt-10 bg-primary hover:bg-primary/90 text-primary-foreground disabled:opacity-50 py-4 sm:py-5 rounded-xl sm:rounded-2xl font-black text-[10px] sm:text-xs uppercase tracking-widest shadow-xl shadow-primary/30 transition-all flex items-center justify-center gap-2 hover:-translate-y-1 active:translate-y-0"
                  >
-                    {loading ? "Publishing..." : <><FiCheck /> Launch Ad</>}
+                    {loading ? <><FiLoader className="animate-spin" /> Publishing...</> : <><FiCheck size={16}/> Launch Ad</>}
                  </button>
               </div>
 
-              <div className="bg-blue-50/50 p-6 rounded-3xl border border-blue-100 flex gap-4">
-                 <FiInfo className="text-blue-600 mt-1 shrink-0" />
-                 <p className="text-xs font-medium text-blue-800 leading-relaxed">
-                    Ads with precise location data are <b>prioritized</b>.
+              {/* Info box */}
+              <div className="bg-primary/5 p-5 sm:p-6 rounded-2xl sm:rounded-3xl border border-primary/20 flex gap-3 sm:gap-4 items-start shadow-sm">
+                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0 mt-0.5">
+                   <FiInfo size={14} />
+                 </div>
+                 <p className="text-[10px] sm:text-xs font-medium text-foreground/80 leading-relaxed">
+                    Ads with precise location data and high-quality images are <strong className="text-primary font-bold">prioritized</strong> in search results and nearby feeds.
                  </p>
               </div>
             </div>
@@ -409,19 +356,20 @@ export default function CreateAdPage() {
   );
 }
 
-function PremiumInput({ label, icon, value, onChange, ...props }: any) {
+function PremiumInput({ label, icon, value, onChange, type = "text", ...props }: any) {
   return (
-    <div className="space-y-2">
-      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">{label}</label>
+    <div className="space-y-1.5 sm:space-y-2">
+      <label className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2 sm:ml-4">{label}</label>
       <div className="relative group">
-        <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors">
+        <div className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors flex items-center justify-center">
           {icon}
         </div>
         <input 
-          {...props} 
+          type={type}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full pl-12 pr-6 py-4 rounded-2xl bg-white border border-slate-100 shadow-sm outline-none focus:ring-4 focus:ring-blue-500/5 transition-all font-bold placeholder:font-medium placeholder:text-slate-300" 
+          {...props} 
+          className="w-full pl-10 sm:pl-12 pr-4 sm:pr-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl bg-card border border-border shadow-sm outline-none focus:ring-2 focus:ring-primary/50 transition-all font-semibold text-sm placeholder:font-medium placeholder:text-muted-foreground/40 text-foreground" 
         />
       </div>
     </div>

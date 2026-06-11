@@ -31,7 +31,24 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(ad);
+    const fraudResult = checkListingForFraud({
+      title: ad.title || "",
+      description: ad.description || "",
+      price: ad.price || 0,
+      category: ad.category || "",
+      images: ad.images || [],
+    });
+
+    const adWithFraud = {
+      ...ad.toObject(),
+      fraudCheck: {
+        score: fraudResult.score,
+        status: fraudResult.status,
+        reasons: fraudResult.reasons,
+      },
+    };
+
+    return NextResponse.json(adWithFraud);
 
   } catch (error) {
 

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { FiHeart, FiMapPin, FiShare2, FiZap } from "react-icons/fi";
+import { FiHeart, FiMapPin, FiShare2, FiZap, FiCheckCircle, FiStar } from "react-icons/fi";
 import api from "@/lib/api";
 
 type Ad = {
@@ -12,6 +12,11 @@ type Ad = {
   location: string;
   image: string;
   isTrending?: boolean;
+  user?: {
+    name: string;
+    isTrusted?: boolean;
+    rating?: number;
+  };
 };
 
 export default function AdCard({ ad }: { ad: Ad }) {
@@ -90,9 +95,15 @@ export default function AdCard({ ad }: { ad: Ad }) {
             <p className="text-2xl font-black text-foreground tracking-tighter">
               ₹ {Number(ad.price).toLocaleString()}
             </p>
-            <h3 className="text-sm font-bold text-muted-foreground line-clamp-1 group-hover:text-blue-600 transition-colors uppercase tracking-tight">
+            <h3 className="text-sm font-bold text-muted-foreground line-clamp-1 group-hover:text-primary transition-colors uppercase tracking-tight">
               {ad.title}
             </h3>
+            {ad.user && ad.user.isTrusted && (
+              <div className="flex items-center gap-1.5 mt-2 text-[9px] font-black uppercase tracking-widest text-emerald-500 bg-emerald-500/10 w-fit px-2 py-0.5 rounded-full border border-emerald-500/20">
+                <FiCheckCircle size={10} /> Trusted Seller
+                {ad.user.rating ? <span className="text-amber-500 ml-1 flex items-center gap-0.5"><FiStar className="fill-amber-500" size={8} /> {ad.user.rating}</span> : null}
+              </div>
+            )}
           </div>
         </div>
 

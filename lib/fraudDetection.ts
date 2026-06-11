@@ -3,9 +3,9 @@
  * 
  * Uses a scoring-based system to detect potential scams and spam listings.
  * Thresholds:
- * - Score >= 5: Marked as "spam" (highly suspicious)
- * - Score >= 3: Marked as "pending" (manual review required)
- * - Score < 3: Marked as "active" (safe)
+ * - Score >= 7: Marked as "spam" (highly suspicious)
+ * - Score >= 5: Marked as "pending" (manual review required)
+ * - Score < 5: Marked as "active" (safe to show publicly)
  */
 
 interface FraudCheckResult {
@@ -74,15 +74,12 @@ export function checkListingForFraud(ad: {
     reasons.push("Description is too short");
   }
 
-  if (!ad.images || ad.images.length === 0) {
-    score += 2;
-    reasons.push("No images provided");
-  }
+  // Note: Missing images is not penalised — images are optional at listing time
 
   // Final Status Determination
   let status: "active" | "pending" | "spam" = "active";
-  if (score >= 5) status = "spam";
-  else if (score >= 3) status = "pending";
+  if (score >= 7) status = "spam";
+  else if (score >= 5) status = "pending";
 
   return { score, status, reasons };
 }

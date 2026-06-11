@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { GoogleGenAI } from "@google/genai";
 
 export async function POST(req: NextRequest) {
   try {
@@ -8,42 +9,28 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "Product title is required" }, { status: 400 });
     }
 
-    const apiKey = process.env.API_KEY; // Using the xAI key provided in .env.local
+    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_CLOUD_VISION_API_KEY;
 
     if (!apiKey) {
       return NextResponse.json({ message: "AI API Key is missing. Please check .env.local" }, { status: 500 });
     }
 
-    // Call xAI (Grok) API
-    const aiResponse = await fetch("https://api.x.ai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model: "grok-beta",
-        messages: [
-          {
-            role: "system",
-            content: "You are an expert product description writer for an e-commerce marketplace like OLX. Write a compelling, concise, and professional product description (100-150 words) based on the title and category provided. Highlight key features, condition expectations, and why it's a great buy. Do not use placeholders."
-          },
-          {
-            role: "user",
-            content: `Product Title: ${title}\nCategory: ${category || "General"}`
-          }
-        ],
+    console.log("[generate-description] Using API key prefix:", apiKey.slice(0, 8));
+
+    const ai = new GoogleGenAI({ apiKey });
+    const systemInstruction = "You are an expert product description writer for an e-commerce marketplace like OLX. Write a compelling, concise, and professional product description (100-150 words) based on the title and category provided. Highlight key features, condition expectations, and why it's a great buy. Do not use placeholders.";
+    const userMessage = `Product Title: ${title}\nCategory: ${category || "General"}`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: userMessage,
+      config: {
+        systemInstruction,
         temperature: 0.7,
-      })
+      }
     });
 
-    if (!aiResponse.ok) {
-      const errorData = await aiResponse.json();
-      throw new Error(errorData.error?.message || "AI API call failed");
-    }
-
-    const aiData = await aiResponse.json();
-    const description = aiData.choices[0].message.content.trim();
+    const description = response.text ? response.text.trim() : "";
 
     return NextResponse.json({
       success: true,

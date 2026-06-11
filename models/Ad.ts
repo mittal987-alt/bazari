@@ -73,12 +73,21 @@ const AdSchema = new mongoose.Schema(
       default: 0,
     },
 
-    // 🚩 Fraud detection status
     status: {
       type: String,
       enum: ["active", "pending", "spam", "sold"],
       default: "active",
       index: true,
+    },
+
+    buyerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    isReviewed: {
+      type: Boolean,
+      default: false,
     },
 
     // 🤝 Group Buying System

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { GoogleGenAI } from "@google/genai";
 import { connectDB } from "@/lib/db";
 import Ad from "@/models/Ad";
 import { findBenchmark } from "@/lib/market-benchmarks";
@@ -25,7 +26,7 @@ export async function GET(req: NextRequest) {
     .select("title price images locationName");
 
     // 2. Fallback to benchmarks if search is too narrow
-    let benchmark = findBenchmark(productName);
+    const benchmark = findBenchmark(productName);
     
     // 3. AI Insights from Grok (xAI)
     let suggestedPrice = 0;
@@ -34,60 +35,56 @@ export async function GET(req: NextRequest) {
     let message = "";
     let dataSource = "platform_data";
 
-    const apiKey = process.env.API_KEY; // Using the key provided in .env.local
+    const apiKey = process.env.GEMINI_API_KEY;
 
-    if (apiKey && apiKey.startsWith("xai-")) {
+    if (apiKey) {
       try {
-        const aiResponse = await fetch("https://api.x.ai/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${apiKey}`
-          },
-          body: JSON.stringify({
-            model: "grok-3",
-            messages: [
-              {
-                role: "system",
-                content: "You are a professional market price estimator for a second-hand marketplace. Respond only in JSON format."
-              },
-              {
-                role: "user",
-                content: `Estimate the current market price in INR (₹) for a used "${productName}" in "${condition}" condition, used for ${yearsUsed} years. 
-                Provide:
-                - suggestedPrice (number)
-                - minPrice (number)
-                - maxPrice (number)
-                - summary (string, short description of market trend)
-                - confidence (number 0-1)
-                
-                Respond with EXACTLY this JSON structure: {"suggestedPrice": 0, "minPrice": 0, "maxPrice": 0, "summary": "", "confidence": 0}`
-              }
-            ],
+        const ai = new GoogleGenAI({ apiKey });
+        const systemInstruction = "You are a professional market price estimator for a second-hand marketplace. Respond only in JSON format.";
+        let internalContext = "";
+        if (similarAds.length > 0) {
+          const prices = similarAds.map(ad => `₹${ad.price}`).join(", ");
+          internalContext = `\n\nInternal Marketplace Data (for reference): Similar active listings on our platform are priced at: ${prices}.`;
+        }
+
+        const userMessage = `You are an expert market analyst with vast knowledge of second-hand marketplace apps (OLX, Quikr, eBay, etc). 
+        Estimate the current fair market price in INR (₹) for a used "${productName}" in "${condition}" condition, used for ${yearsUsed} years. 
+        ${internalContext}
+        
+        Combine your broad marketplace knowledge with our internal data (if provided) to give the most accurate blended valuation.
+        
+        Provide:
+        - suggestedPrice (number)
+        - minPrice (number)
+        - maxPrice (number)
+        - summary (string, short description of market trend, explicitly mentioning if you blended our internal data or used broader market data)
+        - confidence (number 0-1)
+        
+        Respond with EXACTLY this JSON structure: {"suggestedPrice": 0, "minPrice": 0, "maxPrice": 0, "summary": "", "confidence": 0}`;
+
+        const response = await ai.models.generateContent({
+          model: "gemini-2.5-flash",
+          contents: userMessage,
+          config: {
+            systemInstruction,
             temperature: 0,
-            response_format: { type: "json_object" }
-          })
+            responseMimeType: "application/json",
+          }
         });
 
-        if (aiResponse.ok) {
-          const aiData = await aiResponse.json();
-          const contentStr = aiData.choices?.[0]?.message?.content;
-          
-          if (contentStr) {
-            try {
-              const content = JSON.parse(contentStr);
-              suggestedPrice = content.suggestedPrice || 0;
-              minPrice = content.minPrice || 0;
-              maxPrice = content.maxPrice || 0;
-              message = content.summary || "";
-              dataSource = "global_market_insights";
-            } catch (parseErr) {
-              console.error("AI JSON Parse Error:", parseErr, "Content:", contentStr);
-            }
+        const contentStr = response.text ? response.text.trim() : "{}";
+        
+        if (contentStr) {
+          try {
+            const content = JSON.parse(contentStr);
+            suggestedPrice = content.suggestedPrice || 0;
+            minPrice = content.minPrice || 0;
+            maxPrice = content.maxPrice || 0;
+            message = content.summary || "";
+            dataSource = "global_market_insights";
+          } catch (parseErr) {
+            console.error("AI JSON Parse Error:", parseErr, "Content:", contentStr);
           }
-        } else {
-          const errorData = await aiResponse.json();
-          console.warn("AI Estimation API Error (Falling back):", errorData.error);
         }
       } catch (aiErr: any) {
         console.error("AI Estimation Fetch Error:", aiErr.message);

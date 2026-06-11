@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -29,6 +30,17 @@ export default function PriceEstimatorPage() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<SuggestionResult | null>(null);
   const [error, setError] = useState("");
+  const [priceHistory, setPriceHistory] = useState<any[]>([]);
+
+  const searchParams = useSearchParams();
+
+  // Auto-fill from ?product= & ?mode= query params (e.g. linked from ad detail page)
+  useEffect(() => {
+    const product = searchParams.get("product");
+    const modeParam = searchParams.get("mode");
+    if (product) setProductName(product);
+    if (modeParam === "buying" || modeParam === "selling") setMode(modeParam);
+  }, [searchParams]);
 
   const handleEstimate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,6 +49,7 @@ export default function PriceEstimatorPage() {
     setLoading(true);
     setError("");
     setResult(null);
+    setPriceHistory([]);
 
     try {
       const res = await fetch(`/api/price-estimator?productName=${encodeURIComponent(productName)}&condition=${condition}&yearsUsed=${yearsUsed}`);
@@ -45,6 +58,18 @@ export default function PriceEstimatorPage() {
       if (!res.ok) throw new Error(data.message || "Something went wrong");
 
       setResult(data);
+
+      if (data.suggestedPrice) {
+        try {
+          const histRes = await fetch(`/api/ai/price-history?productName=${encodeURIComponent(productName)}&condition=${condition}&yearsUsed=${yearsUsed}&basePrice=${data.suggestedPrice}`);
+          const histData = await histRes.json();
+          if (histRes.ok) {
+            setPriceHistory(histData.history || []);
+          }
+        } catch (hErr) {
+          console.warn("Failed to load history price details", hErr);
+        }
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -421,6 +446,17 @@ export default function PriceEstimatorPage() {
                       ))}
                     </div>
                   </div>
+
+                  {/* PRICE HISTORY CHART */}
+                  {priceHistory.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.35, duration: 0.6 }}
+                    >
+                      <PriceHistoryChart data={priceHistory} suggestedPrice={result.suggestedPrice} />
+                    </motion.div>
+                  )}
                 </motion.div>
               )}
 
@@ -457,6 +493,221 @@ export default function PriceEstimatorPage() {
       <div className="fixed top-0 left-0 w-full h-full pointer-events-none -z-10 overflow-hidden opacity-20 dark:opacity-40">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-400/20 blur-[120px] rounded-full" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-400/20 blur-[120px] rounded-full" />
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================
+   PRICE HISTORY CHART COMPONENT
+   A lightweight, animated SVG line chart for 6-month trends.
+========================================================= */
+
+interface ChartPoint { month: string; price: number; isForecast: boolean; }
+
+function PriceHistoryChart({ data, suggestedPrice }: { data: ChartPoint[]; suggestedPrice: number }) {
+  const W = 560;
+  const H = 200;
+  const PAD = { top: 20, right: 20, bottom: 40, left: 64 };
+
+  const prices = data.map((d) => d.price);
+  const minP = Math.min(...prices) * 0.97;
+  const maxP = Math.max(...prices) * 1.03;
+
+  const toX = (i: number) =>
+    PAD.left + (i / (data.length - 1)) * (W - PAD.left - PAD.right);
+  const toY = (p: number) =>
+    PAD.top + (1 - (p - minP) / (maxP - minP)) * (H - PAD.top - PAD.bottom);
+
+  const linePts = data.map((d, i) => `${toX(i)},${toY(d.price)}`).join(" ");
+  const areaClose = `${toX(data.length - 1)},${H - PAD.bottom} ${toX(0)},${H - PAD.bottom}`;
+  const areaPts = `${linePts} ${areaClose}`;
+
+  // Tick labels on Y axis (3 ticks)
+  const yTicks = [
+    minP + (maxP - minP) * 0.0,
+    minP + (maxP - minP) * 0.5,
+    minP + (maxP - minP) * 1.0,
+  ];
+
+  // Find the actual point index
+  const lastActualIdx = data.findLastIndex ? data.findLastIndex((d) => !d.isForecast) : data.reduce((acc, d, i) => (!d.isForecast ? i : acc), -1);
+
+  return (
+    <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm ring-1 ring-slate-200 dark:ring-slate-800 overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between px-6 pt-6 pb-2">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center shadow-md">
+            <TrendingUp className="w-4 h-4 text-white" />
+          </div>
+          <div>
+            <h3 className="font-black text-slate-900 dark:text-white text-sm tracking-tight">6-Month Price Trend</h3>
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">AI Market Analysis</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-4 text-[10px] font-black uppercase tracking-wider text-slate-400">
+          <span className="flex items-center gap-1.5">
+            <span className="w-3 h-0.5 bg-blue-600 inline-block rounded-full" /> Actual
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-3 h-0.5 bg-purple-500 inline-block rounded-full border-dashed" style={{borderTop: '2px dashed #a855f7', height: 0}} /> Forecast
+          </span>
+        </div>
+      </div>
+
+      {/* SVG Chart */}
+      <div className="px-4 pb-4 overflow-x-auto">
+        <svg
+          viewBox={`0 0 ${W} ${H}`}
+          className="w-full"
+          style={{ minWidth: 320 }}
+        >
+          <defs>
+            <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#2563eb" stopOpacity="0.18" />
+              <stop offset="100%" stopColor="#2563eb" stopOpacity="0" />
+            </linearGradient>
+            <linearGradient id="forecastGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#a855f7" stopOpacity="0.14" />
+              <stop offset="100%" stopColor="#a855f7" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+
+          {/* Horizontal gridlines */}
+          {yTicks.map((tick, i) => (
+            <g key={i}>
+              <line
+                x1={PAD.left}
+                x2={W - PAD.right}
+                y1={toY(tick)}
+                y2={toY(tick)}
+                stroke="#e2e8f0"
+                strokeWidth="1"
+                strokeDasharray={i === 0 ? "0" : "4,4"}
+              />
+              <text
+                x={PAD.left - 8}
+                y={toY(tick) + 4}
+                textAnchor="end"
+                fontSize="9"
+                fontWeight="700"
+                fill="#94a3b8"
+                fontFamily="sans-serif"
+              >
+                {tick >= 1000 ? `₹${(tick / 1000).toFixed(0)}k` : `₹${Math.round(tick)}`}
+              </text>
+            </g>
+          ))}
+
+          {/* Forecast fill area (from lastActual to end) */}
+          {lastActualIdx >= 0 && lastActualIdx < data.length - 1 && (
+            <polygon
+              points={[
+                ...data.slice(lastActualIdx).map((d, i) => `${toX(lastActualIdx + i)},${toY(d.price)}`),
+                `${toX(data.length - 1)},${H - PAD.bottom}`,
+                `${toX(lastActualIdx)},${H - PAD.bottom}`,
+              ].join(" ")}
+              fill="url(#forecastGrad)"
+            />
+          )}
+
+          {/* Main area fill */}
+          <polygon points={areaPts} fill="url(#areaGrad)" />
+
+          {/* Dashed forecast line segment */}
+          {lastActualIdx >= 0 && lastActualIdx < data.length - 1 && (
+            <polyline
+              points={data.slice(lastActualIdx).map((d, i) => `${toX(lastActualIdx + i)},${toY(d.price)}`).join(" ")}
+              fill="none"
+              stroke="#a855f7"
+              strokeWidth="2.5"
+              strokeDasharray="6,4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          )}
+
+          {/* Main line */}
+          <polyline
+            points={data.slice(0, lastActualIdx + 1).map((d, i) => `${toX(i)},${toY(d.price)}`).join(" ")}
+            fill="none"
+            stroke="#2563eb"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+
+          {/* Data points */}
+          {data.map((d, i) => (
+            <g key={i}>
+              {d.isForecast ? (
+                <>
+                  <circle cx={toX(i)} cy={toY(d.price)} r="6" fill="#a855f7" opacity="0.2" />
+                  <circle cx={toX(i)} cy={toY(d.price)} r="4" fill="#a855f7" stroke="white" strokeWidth="2" />
+                </>
+              ) : (
+                <circle
+                  cx={toX(i)}
+                  cy={toY(d.price)}
+                  r={i === lastActualIdx ? 5 : 3.5}
+                  fill={i === lastActualIdx ? "#1d4ed8" : "white"}
+                  stroke="#2563eb"
+                  strokeWidth="2"
+                />
+              )}
+
+              {/* Price tooltip label on hover – just show for forecast and current */}
+              {(d.isForecast || i === lastActualIdx) && (
+                <text
+                  x={toX(i)}
+                  y={toY(d.price) - 10}
+                  textAnchor="middle"
+                  fontSize="9"
+                  fontWeight="800"
+                  fill={d.isForecast ? "#a855f7" : "#2563eb"}
+                  fontFamily="sans-serif"
+                >
+                  {d.price >= 1000 ? `₹${(d.price / 1000).toFixed(1)}k` : `₹${d.price}`}
+                </text>
+              )}
+
+              {/* Month label */}
+              <text
+                x={toX(i)}
+                y={H - PAD.bottom + 16}
+                textAnchor="middle"
+                fontSize="9"
+                fontWeight={d.isForecast ? "900" : "700"}
+                fill={d.isForecast ? "#a855f7" : "#64748b"}
+                fontFamily="sans-serif"
+              >
+                {d.month}
+              </text>
+              {d.isForecast && (
+                <text
+                  x={toX(i)}
+                  y={H - PAD.bottom + 27}
+                  textAnchor="middle"
+                  fontSize="7"
+                  fontWeight="700"
+                  fill="#a855f7"
+                  fontFamily="sans-serif"
+                >
+                  Forecast
+                </text>
+              )}
+            </g>
+          ))}
+        </svg>
+      </div>
+
+      {/* Footer insight */}
+      <div className="px-6 py-4 bg-slate-50 dark:bg-slate-800/40 border-t border-slate-100 dark:border-slate-800 flex items-center gap-3">
+        <Sparkles className="w-4 h-4 text-blue-500 shrink-0" />
+        <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 leading-relaxed uppercase tracking-wide">
+          Prices generated by AI market analysis. Actual prices may vary. The purple forecast point shows the projected next-month value.
+        </p>
       </div>
     </div>
   );

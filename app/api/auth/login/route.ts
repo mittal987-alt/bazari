@@ -18,6 +18,7 @@ export async function POST(req: Request) {
     }
 
     const user = await User.findOne({ email });
+
     if (!user) {
       return NextResponse.json(
         { message: "Invalid credentials" },
@@ -25,7 +26,11 @@ export async function POST(req: Request) {
       );
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(
+      password,
+      user.password
+    );
+
     if (!isMatch) {
       return NextResponse.json(
         { message: "Invalid credentials" },
@@ -34,28 +39,49 @@ export async function POST(req: Request) {
     }
 
     const token = jwt.sign(
-      { id: user._id, role: user.role },
+      {
+        id: user._id,
+        role: user.role,
+      },
       process.env.JWT_SECRET!,
-      { expiresIn: "7d" }
+      {
+        expiresIn: "7d",
+      }
     );
+
+    console.log("=================================");
+    console.log("LOGIN SUCCESS");
+    console.log("USER:", user.email);
+    console.log("TOKEN CREATED:", token.substring(0, 30));
+    console.log("=================================");
 
     const response = NextResponse.json({
       id: user._id,
       name: user.name,
+      email: user.email,
       role: user.role,
+      success: true,
     });
 
     response.cookies.set("token", token, {
       httpOnly: true,
+      secure: false, // localhost
       sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7, // 7 days
     });
 
     return response;
   } catch (error) {
-    console.error("Login error:", error);
+    console.error("LOGIN ERROR:", error);
+
     return NextResponse.json(
-      { message: "Server error" },
-      { status: 500 }
+      {
+        message: "Server error",
+      },
+      {
+        status: 500,
+      }
     );
   }
 }

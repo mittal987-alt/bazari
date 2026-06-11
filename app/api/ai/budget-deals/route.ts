@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { GoogleGenAI } from "@google/genai";
 import { connectDB } from "@/lib/db";
 import Ad from "@/models/Ad";
 
@@ -13,25 +14,28 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "Budget is required" }, { status: 400 });
     }
 
-    // Fetch active ads within a reasonable range of the budget
-    // We fetch ads up to budget + 20% to allow AI to suggest "slightly higher" options if no exact match
-    const maxBudget = Number(budget) * 1.2;
-    const ads = await Ad.find({
-      price: { $lte: maxBudget },
-      status: "active"
-    })
-    .limit(50)
+    // Prioritize finding what they are looking for first, then let AI analyze the budget reality
+    let dbQuery: any = { status: "active" };
+    if (query) {
+      dbQuery.$text = { $search: query };
+    } else {
+      dbQuery.price = { $lte: Number(budget) * 1.5 }; // If no specific item, just show deals in budget
+    }
+
+    const ads = await Ad.find(dbQuery)
+    .limit(20)
     .select("title price category description condition yearsUsed images")
     .lean();
 
     if (ads.length === 0) {
       return NextResponse.json({ 
-        message: "No products found within this budget range.",
+        success: true,
+        message: "No products found matching your criteria in our database.",
         recommendations: [] 
       });
     }
 
-    const apiKey = process.env.API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       return NextResponse.json({ message: "AI API Key is missing" }, { status: 500 });
     }
@@ -49,40 +53,21 @@ export async function POST(req: NextRequest) {
     let isMock = false;
 
     try {
-      const aiResponse = await fetch("https://api.x.ai/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({
-          model: "grok-3",
-          messages: [
-            {
-              role: "system",
-              content: "You are an AI shopping assistant for an online marketplace. Your task is to recommend the best products within the user's budget, prioritizing value for money, condition, and relevance. Respond only in JSON format."
-            },
-            {
-              role: "user",
-              content: `User Budget: ₹${budget}\nUser Query: ${query || "Anything good"}\n\nAvailable Products:\n${productListStr}\n\nYour task:\n1. Recommend the best products within the user’s budget.\n2. Prioritize value for money, good condition, and relevance.\n3. If no exact match found, you can suggest slightly higher/lower options from the list.\n4. Explain briefly why each product is recommended.\n\nOutput ONLY a JSON object with a key "recommendations" containing an array of objects with these keys: "name", "price", "reason", "adId". Match "adId" EXACTLY to the "ID" provided in the list. Respond ONLY with the JSON object.`
-            }
-          ],
+      const ai = new GoogleGenAI({ apiKey });
+      const systemInstruction = "You are an AI shopping assistant for an online marketplace. Your task is to recommend the best products within the user's budget, prioritizing value for money, condition, and relevance. Respond only in JSON format.";
+      const userMessage = `User Budget: ₹${budget}\nUser Query: ${query || "Anything good"}\n\nAvailable Products:\n${productListStr}\n\nYour task:\n1. Recommend the best products within the user’s budget.\n2. Prioritize value for money, good condition, and relevance.\n3. If no exact match found, you can suggest slightly higher/lower options from the list.\n4. Explain briefly why each product is recommended.\n\nOutput ONLY a JSON object with a key "recommendations" containing an array of objects with these keys: "name", "price", "reason", "adId". Match "adId" EXACTLY to the "ID" provided in the list. Respond ONLY with the JSON object.`;
+
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: userMessage,
+        config: {
+          systemInstruction,
           temperature: 0,
-          response_format: { type: "json_object" }
-        })
+          responseMimeType: "application/json",
+        }
       });
 
-      if (!aiResponse.ok) {
-        const errorData = await aiResponse.json();
-        console.error("AI API Error Details:", JSON.stringify(errorData, null, 2));
-        const errorMessage = typeof errorData.error === "string" 
-          ? errorData.error 
-          : errorData.error?.message || "AI API call failed";
-        throw new Error(errorMessage);
-      }
-
-      const aiData = await aiResponse.json();
-      const contentStr = aiData.choices[0].message.content.trim();
+      const contentStr = response.text ? response.text.trim() : "{}";
       const content = JSON.parse(contentStr);
       recommendations = content.recommendations || [];
     } catch (error: any) {
@@ -90,7 +75,7 @@ export async function POST(req: NextRequest) {
       isMock = true;
       
       // Fallback: Smart Keyword Matching + Value Ranking
-      const searchKeywords = (query || "").toLowerCase().split(" ").filter(k => k.length > 2);
+      const searchKeywords = (query || "").toLowerCase().split(" ").filter((k: string) => k.length > 2);
       
       recommendations = ads
         .map(ad => {
@@ -99,7 +84,7 @@ export async function POST(req: NextRequest) {
           const desc = ad.description.toLowerCase();
           
           // Match keywords
-          searchKeywords.forEach(kw => {
+          searchKeywords.forEach((kw: string) => {
             if (title.includes(kw)) score += 10;
             if (desc.includes(kw)) score += 5;
           });

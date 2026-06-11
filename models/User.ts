@@ -10,6 +10,9 @@ const UserSchema = new Schema(
       enum: ["buyer", "seller", "admin"],
       default: "buyer",
     },
+    rating: { type: Number, default: 0 },
+    reviewCount: { type: Number, default: 0 },
+    isTrusted: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
