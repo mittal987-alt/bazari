@@ -4,7 +4,7 @@ import Ad from "@/models/Ad";
 import Chat from "@/models/Chat";
 import { getUserFromToken } from "@/lib/auth";
 
-export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const POST: any = async (req: NextRequest | Request, context: any) => {
   try {
     const user = await getUserFromToken();
     if (!user) {
@@ -12,9 +12,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
 
     await connectDB();
+    // Support both Next.js handler shapes where `context.params` may be a Promise or a plain object
+    const params = context?.params;
+    const resolvedParams = params && typeof params.then === "function" ? await params : params || {};
+    const { id } = resolvedParams;
 
-    const { id } = await params;
-    const body = await req.json();
+    const body = await (req as Request).json();
     const { buyerId } = body;
 
     const ad = await Ad.findById(id);
