@@ -8,7 +8,7 @@ import DynamicIcon from "@/components/common/DynamicIcon";
 const navItems = [
   { title: "Browse", href: "/ads", icon: "FiShoppingCart" },
   { title: "Saved", href: "/saved", icon: "FiHeart" },
-  { title: "Chats", href: "/chats", icon: "FiMessageCircle" },
+  { title: "Chats", href: "/messages", icon: "FiMessageCircle" },
   { title: "Profile", href: "/profile", icon: "FiUser" },
 ];
 

@@ -38,6 +38,11 @@ io.on("connection", (socket) => {
     }
   });
 
+  // typing status relay
+  socket.on("typing", (data) => {
+    socket.to(data.chatId).emit("display_typing", data);
+  });
+
   socket.on("disconnect", () => {
     console.log("User disconnected");
   });
