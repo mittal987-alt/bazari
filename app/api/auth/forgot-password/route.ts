@@ -75,7 +75,7 @@ export async function POST(req: Request) {
 
     await transporter.sendMail({
       from: `"Bazaari" <${process.env.EMAIL_USER}>`,
-      to: user.email,
+      to: user.email || "",
       subject: "Reset Your Bazaari Password",
       html: `
         <!DOCTYPE html>

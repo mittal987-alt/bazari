@@ -26,9 +26,17 @@ export async function POST(req: Request) {
       );
     }
 
+    // Google-only accounts have no password
+    if (!user.password) {
+      return NextResponse.json(
+        { message: "This account uses Google Sign-In. Please log in with Google instead." },
+        { status: 401 }
+      );
+    }
+
     const isMatch = await bcrypt.compare(
       password,
-      user.password
+      user.password as string
     );
 
     if (!isMatch) {

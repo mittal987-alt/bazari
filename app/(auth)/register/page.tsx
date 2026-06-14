@@ -10,33 +10,7 @@ import { Input } from "@/components/ui/input";
 import { useUserStore } from "@/store/userStore";
 import { FiUser, FiMail, FiLock, FiEye, FiEyeOff, FiArrowLeft } from "react-icons/fi";
 
-declare global {
-  interface Window {
-    google?: {
-      accounts: {
-        id: {
-          initialize: (config: {
-            client_id: string;
-            callback: (response: { credential: string }) => void;
-            auto_select?: boolean;
-            cancel_on_tap_outside?: boolean;
-          }) => void;
-          renderButton: (
-            element: HTMLElement,
-            config: {
-              theme?: string;
-              size?: string;
-              width?: number;
-              shape?: string;
-              text?: string;
-            }
-          ) => void;
-          prompt: () => void;
-        };
-      };
-    };
-  }
-}
+// Window.google type is declared in types/google.d.ts
 
 export default function RegisterPage() {
   const router = useRouter();
