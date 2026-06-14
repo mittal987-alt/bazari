@@ -31,6 +31,7 @@ declare global {
               text?: string;
             }
           ) => void;
+          prompt: () => void;
         };
       };
     };
