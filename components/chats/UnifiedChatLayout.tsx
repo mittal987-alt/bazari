@@ -568,6 +568,8 @@ export default function UnifiedChatLayout({ activeChatId }: UnifiedChatLayoutPro
               <Link 
                 href="/ads" 
                 className="mt-8 bg-foreground hover:bg-primary text-background hover:text-white px-8 py-3.5 rounded-full font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 shadow-lg border border-border"
+              >
+                Browse Marketplace
               </Link>
             </motion.div>
           ) : (
