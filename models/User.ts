@@ -4,7 +4,9 @@ const UserSchema = new Schema(
   {
     name: String,
     email: { type: String, unique: true },
-    password: String,
+    password: { type: String, required: false }, // not required for Google users
+    googleId: { type: String, sparse: true },    // Google OAuth sub
+    avatar: { type: String },                    // Google profile picture
     role: {
       type: String,
       enum: ["buyer", "seller", "admin"],
@@ -13,8 +15,17 @@ const UserSchema = new Schema(
     rating: { type: Number, default: 0 },
     reviewCount: { type: Number, default: 0 },
     isTrusted: { type: Boolean, default: false },
+    // Password reset
+    resetPasswordToken: { type: String, default: null },
+    resetPasswordExpiry: { type: Date, default: null },
   },
-  { timestamps: true }
+  { timestamps: true, strict: false }
 );
 
-export default models.User || mongoose.model("User", UserSchema);
+// Delete cached model to avoid stale schema in hot-reload environments
+if (models.User) {
+  delete (mongoose as any).models.User;
+}
+
+export default mongoose.model("User", UserSchema);
+

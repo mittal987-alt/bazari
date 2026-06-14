@@ -21,10 +21,10 @@ export default function MobileBottomNav() {
   return (
     <nav className="
       fixed bottom-0 left-0 right-0 z-50
-      bg-white dark:bg-neutral-900
-      border-t md:hidden
+      bg-background/80 backdrop-blur-lg
+      border-t border-border/60 md:hidden
     ">
-      <div className="flex justify-around py-2">
+      <div className="flex justify-around py-3">
         {navItems.map((item) => {
           const active =
             pathname === item.href ||
@@ -35,13 +35,13 @@ export default function MobileBottomNav() {
               key={item.href}
               href={item.href}
               className={clsx(
-                "flex flex-col items-center text-xs transition",
+                "flex flex-col items-center gap-1 text-[10px] font-black uppercase tracking-wider transition-colors duration-300",
                 active
-                  ? "text-blue-600"
-                  : "text-gray-500"
+                  ? "text-primary"
+                  : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <span className="text-lg">
+              <span className="text-xl">
                 <DynamicIcon iconName={item.icon} />
               </span>
               {item.title}

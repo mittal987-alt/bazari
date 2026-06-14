@@ -13,6 +13,39 @@ import {
 } from "react-icons/fi";
 import { formatDistanceToNow, format, isToday, isYesterday } from "date-fns";
 
+const getInitialsGradient = (name: string = "U") => {
+  const code = name.charCodeAt(0) || 0;
+  const gradients = [
+    "from-indigo-500 to-purple-600 shadow-indigo-500/20",
+    "from-pink-500 to-rose-600 shadow-rose-500/20",
+    "from-emerald-400 to-teal-600 shadow-teal-500/20",
+    "from-amber-400 to-orange-600 shadow-orange-500/20",
+    "from-blue-500 to-cyan-600 shadow-blue-500/20",
+    "from-violet-600 to-fuchsia-600 shadow-violet-500/20",
+    "from-sky-500 to-blue-700 shadow-sky-500/20"
+  ];
+  return gradients[code % gradients.length];
+};
+
+const getCompactTime = (dateString: string) => {
+  if (!dateString) return "";
+  try {
+    const date = new Date(dateString);
+    const diffMs = Date.now() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return "1m";
+    if (diffMins < 60) return `${diffMins}m`;
+    if (diffHours < 24) return `${diffHours}h`;
+    if (diffDays < 7) return `${diffDays}d`;
+    return format(date, "MMM d");
+  } catch (e) {
+    return "recently";
+  }
+};
+
 type Chat = {
   _id: string;
   buyer: { _id: string; name: string; avatar?: string; lastSeen?: string; email?: string };
@@ -357,7 +390,7 @@ export default function UnifiedChatLayout({ activeChatId }: UnifiedChatLayoutPro
   };
 
   return (
-    <div className={`font-sans flex bg-background text-foreground transition-colors duration-500 overflow-hidden ${
+    <div className={`font-sans flex bg-background text-foreground transition-colors duration-500 overflow-hidden w-full max-w-full ${
       isMessagesPage ? "h-[calc(100vh-68px)] lg:h-[calc(100vh-80px)] mt-[68px] lg:mt-[80px]" : "h-screen"
     }`}>
       {/* ── LEFT PANEL: CHATS LIST sidebar ── */}
@@ -421,9 +454,7 @@ export default function UnifiedChatLayout({ activeChatId }: UnifiedChatLayoutPro
               const isOnline = other?.lastSeen 
                 ? (Date.now() - new Date(other.lastSeen).getTime()) < 180000 
                 : false;
-              const timeLabel = chat.updatedAt 
-                ? formatDistanceToNow(new Date(chat.updatedAt), { addSuffix: false }) + " ago"
-                : "Recently";
+              const compactTime = chat.updatedAt ? getCompactTime(chat.updatedAt) : "recently";
 
               return (
                 <Link 
@@ -437,19 +468,19 @@ export default function UnifiedChatLayout({ activeChatId }: UnifiedChatLayoutPro
                   }}
                   className="block"
                 >
-                  <div className={`group p-4 rounded-2xl border transition-all duration-300 flex items-center gap-4 relative cursor-pointer ${
+                  <div className={`group p-4 rounded-[1.6rem] border transition-all duration-300 flex items-center gap-4 relative cursor-pointer ${
                     isActive 
-                      ? "bg-primary/[0.07] border-primary/40 shadow-sm" 
-                      : "bg-card/40 hover:bg-card border-border/40 hover:border-primary/20 hover:shadow-md"
+                      ? "bg-primary/[0.06] border-primary/30 shadow-lg shadow-primary/5" 
+                      : "bg-card/45 hover:bg-card border-border/40 hover:border-primary/20 hover:shadow-md"
                   }`}>
                     {/* Active Accent Bar */}
                     {isActive && (
-                      <div className="absolute left-0 top-4 bottom-4 w-1 bg-primary rounded-r-md" />
+                      <div className="absolute left-0 top-3.5 bottom-3.5 w-1.5 bg-primary rounded-r-md" />
                     )}
 
                     {/* Avatar */}
                     <div className="relative shrink-0">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-muted to-muted-foreground/10 border border-border flex items-center justify-center overflow-hidden font-black text-muted-foreground shadow-inner text-base">
+                      <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${getInitialsGradient(other?.name || "U")} flex items-center justify-center overflow-hidden font-black text-white text-base shadow-md border-2 border-background`}>
                         {other?.avatar ? (
                           <img src={other.avatar} className="w-full h-full object-cover" alt="" />
                         ) : (
@@ -457,34 +488,35 @@ export default function UnifiedChatLayout({ activeChatId }: UnifiedChatLayoutPro
                         )}
                       </div>
                       {isOnline && (
-                        <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-500 border-2 border-background rounded-full shadow-sm" />
+                        <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-background rounded-full shadow-md animate-pulse" />
                       )}
                     </div>
 
                     {/* Meta Content */}
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-center mb-1">
-                        <span className="font-bold text-foreground text-sm tracking-tight truncate pr-2">
+                        <span className="font-black text-foreground text-sm tracking-tight truncate pr-2">
                           {other?.name}
                         </span>
-                        <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest whitespace-nowrap">
-                          {timeLabel.replace("about ", "")}
+                        <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest whitespace-nowrap">
+                          {compactTime}
                         </span>
                       </div>
 
                       {/* Product Tag */}
                       {chat.adId && (
-                        <div className="text-[10px] font-bold text-primary truncate mb-1 bg-primary/5 px-2 py-0.5 rounded border border-primary/10 w-fit">
-                          🏷️ {chat.adId.title}
+                        <div className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider text-primary truncate mb-1.5 bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-md">
+                          <span className="w-1 h-1 rounded-full bg-primary animate-pulse" />
+                          {chat.adId.title}
                         </div>
                       )}
 
                       {/* Last message / Typing */}
                       <div className="flex justify-between items-center h-4">
                         {chat.isTyping ? (
-                          <span className="text-primary text-[11px] font-black animate-pulse uppercase tracking-widest">Typing...</span>
+                          <span className="text-primary text-[10px] font-black animate-pulse uppercase tracking-widest">Typing...</span>
                         ) : (
-                          <p className="text-muted-foreground text-xs font-medium truncate pr-4">
+                          <p className="text-muted-foreground text-xs font-semibold truncate pr-4">
                             {chat.lastMessage || "No messages yet"}
                           </p>
                         )}
@@ -536,8 +568,6 @@ export default function UnifiedChatLayout({ activeChatId }: UnifiedChatLayoutPro
               <Link 
                 href="/ads" 
                 className="mt-8 bg-foreground hover:bg-primary text-background hover:text-white px-8 py-3.5 rounded-full font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 shadow-lg border border-border"
-              >
-                Browse Marketplace
               </Link>
             </motion.div>
           ) : (
@@ -550,8 +580,8 @@ export default function UnifiedChatLayout({ activeChatId }: UnifiedChatLayoutPro
               className="flex-1 flex flex-col h-full overflow-hidden"
             >
               {/* Active Chat Header */}
-              <header className="bg-card/75 backdrop-blur-md border-b border-border/80 px-6 py-4 flex items-center justify-between shrink-0">
-                <div className="flex items-center gap-4">
+              <header className="bg-card/75 backdrop-blur-md border-b border-border/80 px-4 py-3 sm:px-6 sm:py-4 flex items-center justify-between shrink-0 gap-2 min-w-0">
+                <div className="flex items-center gap-2 sm:gap-4 min-w-0">
                   {/* Back button (Mobile view toggle / go back) */}
                   <Link 
                     href="/messages"
@@ -561,25 +591,25 @@ export default function UnifiedChatLayout({ activeChatId }: UnifiedChatLayoutPro
                         router.push("/messages");
                       }
                     }}
-                    className="p-2.5 hover:bg-muted rounded-xl transition-colors md:hidden text-foreground border border-border/40"
+                    className="p-2 hover:bg-muted rounded-xl transition-colors md:hidden text-foreground border border-border/40 shrink-0"
                   >
-                    <FiArrowLeft size={18} />
+                    <FiArrowLeft size={16} />
                   </Link>
 
                   {/* Avatar & User Details */}
-                  <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-primary to-violet-500 text-white flex items-center justify-center font-black shadow-lg shadow-primary/10 text-base">
+                  <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                    <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-tr from-primary to-violet-500 text-white flex items-center justify-center font-black shadow-lg shadow-primary/10 text-sm sm:text-base shrink-0">
                       {otherUser?.avatar ? (
                         <img src={otherUser.avatar} className="w-full h-full object-cover rounded-xl" alt="" />
                       ) : (
                         otherUser?.name?.[0]?.toUpperCase() || "U"
                       )}
                     </div>
-                    <div>
-                      <h2 className="text-base font-black tracking-tight text-foreground leading-none">
+                    <div className="min-w-0">
+                      <h2 className="text-sm sm:text-base font-black tracking-tight text-foreground leading-none truncate">
                         {otherUser?.name}
                       </h2>
-                      <span className="text-[9px] text-emerald-500 font-bold uppercase tracking-widest mt-1 block">
+                      <span className="text-[8px] sm:text-[9px] text-emerald-500 font-bold uppercase tracking-widest mt-1 block leading-none">
                         Active Deals
                       </span>
                     </div>
@@ -590,16 +620,16 @@ export default function UnifiedChatLayout({ activeChatId }: UnifiedChatLayoutPro
                 {ad && (
                   <Link 
                     href={`/ads/${ad._id}`}
-                    className="flex items-center gap-3 bg-muted/50 hover:bg-muted hover:border-primary/20 border border-border p-2 pr-4 rounded-2xl max-w-[240px] transition-all group cursor-pointer"
+                    className="flex items-center gap-2 sm:gap-3 bg-muted/50 hover:bg-muted hover:border-primary/20 border border-border p-1.5 sm:p-2 sm:pr-4 rounded-xl sm:rounded-2xl max-w-[120px] sm:max-w-[240px] transition-all group cursor-pointer shrink-0"
                   >
-                    <div className="relative w-10 h-10 rounded-lg overflow-hidden shrink-0 border border-background bg-card">
+                    <div className="relative w-8 h-8 sm:w-10 sm:h-10 rounded-lg overflow-hidden shrink-0 border border-background bg-card">
                       {ad.images?.[0] ? (
                         <img src={ad.images[0]} className="object-cover w-full h-full" alt="" />
                       ) : (
                         <div className="w-full h-full bg-slate-100 flex items-center justify-center text-[10px] text-slate-400">No Image</div>
                       )}
                     </div>
-                    <div className="min-w-0">
+                    <div className="min-w-0 hidden sm:block">
                       <p className="text-[10px] font-black text-foreground truncate group-hover:text-primary transition-colors leading-tight">
                         {ad.title}
                       </p>
@@ -609,7 +639,7 @@ export default function UnifiedChatLayout({ activeChatId }: UnifiedChatLayoutPro
                     </div>
                   </Link>
                 )}
-              </header>
+              </header>         </header>
 
               {/* Messages Feed Viewport */}
               <div className="flex-1 overflow-y-auto px-6 py-6 scrollbar-hide">

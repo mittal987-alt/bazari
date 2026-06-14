@@ -54,29 +54,29 @@ export default function NotificationProvider({ children }: { children: React.Rea
               initial={{ opacity: 0, y: 50, scale: 0.9 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
-              className="bg-white rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.1)] border border-slate-100 p-4 w-80 flex items-start gap-4"
+              className="bg-card rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.15)] border border-border p-4 w-80 flex items-start gap-4"
             >
-              <div className="bg-blue-100 text-blue-600 p-3 rounded-xl shrink-0">
+              <div className="bg-primary/10 text-primary p-3 rounded-xl shrink-0">
                 <FiMessageCircle size={20} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-black uppercase tracking-widest text-blue-600 mb-1">
+                <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-1">
                   New Message
                 </p>
-                <p className="text-sm font-bold text-slate-900 truncate">
+                <p className="text-sm font-bold text-foreground truncate">
                   {notification.text}
                 </p>
                 <Link 
                   href={`/chats/${notification.chatId}`}
                   onClick={() => setNotification(null)}
-                  className="text-xs text-slate-400 hover:text-blue-600 font-semibold mt-2 inline-block transition-colors"
+                  className="text-xs text-muted-foreground hover:text-primary font-semibold mt-2 inline-block transition-colors"
                 >
                   View Conversation →
                 </Link>
               </div>
               <button 
                 onClick={() => setNotification(null)}
-                className="text-slate-300 hover:text-rose-500 transition-colors shrink-0"
+                className="text-muted-foreground/50 hover:text-destructive transition-colors shrink-0"
               >
                 <FiX size={18} />
               </button>

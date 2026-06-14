@@ -200,22 +200,22 @@ export default function HomePage() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8, delay: 0.2 }}
-              className="bg-card border border-border shadow-2xl rounded-[2.5rem] overflow-hidden flex flex-col h-[480px] relative"
+              className="bg-slate-950 border border-slate-800 shadow-2xl rounded-[2.5rem] overflow-hidden flex flex-col h-[480px] relative text-white"
             >
               {/* Simulator Header */}
-              <div className="bg-muted/40 p-5 border-b border-border/60 flex justify-between items-center shrink-0">
+              <div className="bg-slate-900/60 p-5 border-b border-slate-800/80 flex justify-between items-center shrink-0">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary to-[hsl(var(--luxury-violet))] text-white flex items-center justify-center font-bold shadow-md shadow-primary/10">
                     <FiZap className="fill-current" />
                   </div>
                   <div>
-                    <h3 className="text-xs font-black tracking-tight uppercase leading-none text-foreground">Bargain AI Simulator</h3>
+                    <h3 className="text-xs font-black tracking-tight uppercase leading-none text-white">Bargain AI Simulator</h3>
                     <p className="text-[9px] text-green-500 font-bold uppercase tracking-widest mt-1 block">Live Negotiation</p>
                   </div>
                 </div>
                 {/* Simulated product */}
                 <div className="text-right">
-                  <p className="text-[9px] font-black uppercase text-muted-foreground tracking-widest leading-none">Original price</p>
+                  <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest leading-none">Original price</p>
                   <p className="text-sm font-black text-primary tracking-tight mt-1">₹24,000</p>
                 </div>
               </div>
@@ -223,7 +223,7 @@ export default function HomePage() {
               {/* Chat room scroll frame */}
               <div className="flex-1 p-5 overflow-y-auto space-y-4 scrollbar-hide">
                 <div className="flex justify-center mb-3">
-                  <span className="text-[8px] font-black text-muted-foreground bg-muted border border-border px-3 py-1 rounded-full uppercase tracking-widest">
+                  <span className="text-[8px] font-black text-slate-400 bg-slate-900 border border-slate-800 px-3 py-1 rounded-full uppercase tracking-widest">
                     Try Bargaining Below
                   </span>
                 </div>
@@ -234,7 +234,7 @@ export default function HomePage() {
                     <div key={msg.id} className={`flex ${isBot ? "justify-start" : "justify-end"}`}>
                       <div className={`max-w-[85%] px-4 py-2.5 rounded-[1.4rem] shadow-inner text-xs font-medium leading-relaxed ${
                         isBot 
-                          ? "bg-muted text-foreground rounded-bl-none" 
+                          ? "bg-slate-900 text-slate-100 rounded-bl-none border border-slate-800/60" 
                           : "bg-primary text-white rounded-br-none"
                       }`}>
                         <p>{msg.text}</p>
@@ -246,7 +246,7 @@ export default function HomePage() {
 
                 {isTyping && (
                   <div className="flex justify-start">
-                    <div className="bg-muted px-4 py-2.5 rounded-[1.2rem] rounded-bl-none flex gap-1 items-center shadow-inner">
+                    <div className="bg-slate-900 px-4 py-2.5 rounded-[1.2rem] rounded-bl-none flex gap-1 items-center shadow-inner border border-slate-800/60">
                       <span className="w-1 h-1 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                       <span className="w-1 h-1 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                       <span className="w-1 h-1 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
@@ -256,7 +256,7 @@ export default function HomePage() {
               </div>
 
               {/* Input Action Panel */}
-              <div className="p-4 bg-muted/20 border-t border-border/60 shrink-0 space-y-3">
+              <div className="p-4 bg-slate-900/40 border-t border-slate-800/80 shrink-0 space-y-3">
                 {simStep < 3 ? (
                   <div className="flex flex-wrap gap-1.5 justify-center">
                     {simOffers.map((opt, i) => (
@@ -264,7 +264,7 @@ export default function HomePage() {
                         key={i}
                         disabled={isTyping}
                         onClick={() => handleSimSubmit(opt.text)}
-                        className="px-3 py-1 bg-card hover:bg-primary hover:text-white border border-border hover:border-primary rounded-full transition-all duration-300 font-bold text-[9px] text-muted-foreground uppercase tracking-widest disabled:opacity-50"
+                        className="px-3 py-1 bg-slate-900 hover:bg-primary hover:text-white border border-slate-800 hover:border-primary rounded-full transition-all duration-300 font-bold text-[9px] text-slate-300 uppercase tracking-widest disabled:opacity-50"
                       >
                         {opt.label}
                       </button>
@@ -286,12 +286,12 @@ export default function HomePage() {
                     onChange={(e) => setSimInput(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleSimSubmit(simInput)}
                     placeholder="Enter custom counter offer..."
-                    className="flex-1 bg-muted/50 border border-border rounded-full px-4 py-2.5 outline-none focus:ring-2 focus:ring-primary/50 text-xs font-medium text-foreground disabled:opacity-50"
+                    className="flex-1 bg-slate-900 border border-slate-800 rounded-full px-4 py-2.5 outline-none focus:ring-2 focus:ring-primary/50 text-xs font-medium text-white placeholder-slate-500 disabled:opacity-50"
                   />
                   <button
                     disabled={!simInput.trim() || isTyping || simStep >= 3}
                     onClick={() => handleSimSubmit(simInput)}
-                    className="w-9 h-9 bg-foreground text-background hover:bg-primary hover:text-white disabled:bg-muted disabled:text-muted-foreground rounded-full flex items-center justify-center transition-all shrink-0 cursor-pointer"
+                    className="w-9 h-9 bg-white text-slate-950 hover:bg-primary hover:text-white disabled:bg-slate-900 disabled:text-slate-700 rounded-full flex items-center justify-center transition-all shrink-0 cursor-pointer"
                   >
                     <FiChevronRight />
                   </button>
@@ -320,18 +320,21 @@ export default function HomePage() {
                 icon={<FiShoppingCart className="w-7 h-7 text-primary" />}
                 title="Buy Intelligently"
                 desc="Examine listings featuring automatic AI price benchmarks. Spot fair value immediately using our integrated machine learning price analyzer."
+                theme="blue"
               />
 
               <FeatureCard
                 icon={<FiPackage className="w-7 h-7 text-[hsl(var(--luxury-violet))]" />}
                 title="Sell Seamlessly"
                 desc="Create high-conversion listings with AI-assisted title & description generators. Instantly sync item metrics with buyer query notifications."
+                theme="purple"
               />
 
               <FeatureCard
                 icon={<FiMessageCircle className="w-7 h-7 text-[hsl(var(--luxury-rose))]" />}
                 title="Chat Confidently"
                 desc="Enjoy instant peer chat with real-time socket architecture. Get AI suggestions for optimal counter-offers inside the screen."
+                theme="rose"
               />
             </div>
           </div>
@@ -370,26 +373,26 @@ export default function HomePage() {
 
               {/* Right Mock Graphic */}
               <div className="lg:col-span-5 flex justify-center">
-                <div className="bg-background border border-border p-6 rounded-3xl w-full max-w-[320px] shadow-lg relative overflow-hidden flex flex-col items-center text-center">
+                <div className="bg-gradient-to-b from-emerald-500/[0.015] to-emerald-500/[0.05] backdrop-blur-xl border border-emerald-500/15 p-6 rounded-3xl w-full max-w-[320px] shadow-lg hover:shadow-emerald-500/5 transition-all duration-300 relative overflow-hidden flex flex-col items-center text-center">
                   <div className="w-24 h-24 rounded-full border-8 border-dashed border-emerald-500 flex items-center justify-center mb-4">
                     <span className="text-2xl font-black text-foreground">9.8</span>
                   </div>
                   <h4 className="font-black text-sm uppercase text-foreground">High Trust Score</h4>
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Listing Safety Verified</p>
                   
-                  <div className="mt-4 pt-4 border-t border-border/50 w-full text-left space-y-1.5">
+                  <div className="mt-4 pt-4 border-t border-emerald-500/10 w-full text-left space-y-1.5">
                     <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Security scan indicators:</p>
                     <div className="flex justify-between text-[10px] font-bold">
-                      <span className="text-slate-500">Spam Check</span>
-                      <span className="text-emerald-500">Passed</span>
+                      <span className="text-muted-foreground/80">Spam Check</span>
+                      <span className="text-emerald-500 font-black">Passed</span>
                     </div>
                     <div className="flex justify-between text-[10px] font-bold">
-                      <span className="text-slate-500">Off-Platform links</span>
-                      <span className="text-emerald-500">None</span>
+                      <span className="text-muted-foreground/80">Off-Platform links</span>
+                      <span className="text-emerald-500 font-black">None</span>
                     </div>
                     <div className="flex justify-between text-[10px] font-bold">
-                      <span className="text-slate-500">Price Logic</span>
-                      <span className="text-emerald-500">Accurate</span>
+                      <span className="text-muted-foreground/80">Price Logic</span>
+                      <span className="text-emerald-500 font-black">Accurate</span>
                     </div>
                   </div>
                 </div>
@@ -476,20 +479,50 @@ export default function HomePage() {
   );
 }
 
-function FeatureCard({ icon, title, desc }: { icon: React.ReactNode, title: string, desc: string }) {
+type FeatureCardProps = {
+  icon: React.ReactNode;
+  title: string;
+  desc: string;
+  theme: "blue" | "purple" | "rose";
+};
+
+function FeatureCard({ icon, title, desc, theme }: FeatureCardProps) {
+  const themeClasses = {
+    blue: {
+      border: "border-blue-500/10 hover:border-blue-500/30",
+      bg: "from-blue-500/[0.015] to-blue-500/[0.04] hover:from-blue-500/[0.04] hover:to-blue-500/[0.08]",
+      shadow: "hover:shadow-xl hover:shadow-blue-500/5",
+      glow: "bg-blue-500/5 group-hover:bg-blue-500/10",
+      iconBg: "bg-blue-500/10 text-blue-500"
+    },
+    purple: {
+      border: "border-purple-500/10 hover:border-purple-500/30",
+      bg: "from-purple-500/[0.015] to-purple-500/[0.04] hover:from-purple-500/[0.04] hover:to-purple-500/[0.08]",
+      shadow: "hover:shadow-xl hover:shadow-purple-500/5",
+      glow: "bg-purple-500/5 group-hover:bg-purple-500/10",
+      iconBg: "bg-purple-500/10 text-purple-500"
+    },
+    rose: {
+      border: "border-rose-500/10 hover:border-rose-500/30",
+      bg: "from-rose-500/[0.015] to-rose-500/[0.04] hover:from-rose-500/[0.04] hover:to-rose-500/[0.08]",
+      shadow: "hover:shadow-xl hover:shadow-rose-500/5",
+      glow: "bg-rose-500/5 group-hover:bg-rose-500/10",
+      iconBg: "bg-rose-500/10 text-rose-500"
+    }
+  }[theme];
+
   return (
-    <div className="dashboard-card p-10 group bg-card/50 backdrop-blur-md border-border/40 hover:bg-card relative overflow-hidden text-left flex flex-col justify-between h-[300px]">
+    <div className={`p-10 group bg-gradient-to-b ${themeClasses.bg} backdrop-blur-xl border ${themeClasses.border} ${themeClasses.shadow} rounded-[2rem] transition-all duration-500 relative overflow-hidden text-left flex flex-col justify-between h-[320px]`}>
       <div className="space-y-6">
-        <div className="w-14 h-14 rounded-2xl bg-muted/60 border border-border flex items-center justify-center group-hover:scale-110 transition-transform duration-500 shadow-inner">
+        <div className={`w-14 h-14 rounded-2xl ${themeClasses.iconBg} border border-transparent flex items-center justify-center group-hover:scale-110 transition-transform duration-500 shadow-inner`}>
           {icon}
         </div>
         <div className="space-y-3">
           <h3 className="text-xl font-black text-foreground tracking-tighter">{title}</h3>
-          <p className="text-muted-foreground/80 text-xs font-medium leading-relaxed">{desc}</p>
+          <p className="text-muted-foreground/80 text-xs font-semibold leading-relaxed">{desc}</p>
         </div>
       </div>
-      {/* Visual background glow indicator */}
-      <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 blur-2xl group-hover:bg-primary/10 transition-colors pointer-events-none" />
+      <div className={`absolute top-0 right-0 w-24 h-24 ${themeClasses.glow} blur-2xl transition-colors pointer-events-none`} />
     </div>
   );
 }
