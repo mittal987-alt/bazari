@@ -5,7 +5,12 @@ const httpServer = createServer();
 
 const io = new Server(httpServer, {
   cors: {
-    origin: ["http://localhost:3000", "http://localhost:3001"],
+    origin: [
+      "http://localhost:3000",
+      "http://localhost:3001",
+      "https://bazari-plum.vercel.app",
+      process.env.NEXT_PUBLIC_APP_URL || "",
+    ].filter(Boolean),
     methods: ["GET", "POST"],
   },
 });
