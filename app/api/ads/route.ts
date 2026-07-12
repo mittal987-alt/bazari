@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import Ad from "@/models/Ad";
 import { checkListingForFraud } from "@/lib/fraudDetection";
+import { generateEmbedding } from "@/services/ai.service";
 
 export const runtime = "nodejs";
 
@@ -122,6 +123,12 @@ export async function POST(req: NextRequest) {
       images: images || [],
     });
 
+    // 🧠 GENERATE EMBEDDING for semantic/vector search
+    // Built from the same fields the chatbot's search prompt uses, so
+    // search relevance stays consistent with how listings are displayed.
+    const textToEmbed = `Title: ${title}. Category: ${category}. Description: ${body.description || ""}. Price: ₹${price}. Location: ${location}.`;
+    const embedding = await generateEmbedding(textToEmbed);
+
     const newAd = await Ad.create({
       title,
       price,
@@ -130,6 +137,7 @@ export async function POST(req: NextRequest) {
       user: userId,
       description: body.description || "",
       status: fraudResult.status,
+      embedding,
 
       // ✅ GEO LOCATION
       location: {

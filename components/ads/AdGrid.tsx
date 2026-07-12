@@ -173,7 +173,9 @@ export default function AdGrid({
       className={
         layout === "horizontal"
           ? "flex gap-4 sm:gap-5 overflow-x-auto pb-2"
-          : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5"
+          : compact
+            ? "grid grid-cols-1 gap-4"
+            : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5"
       }
     >
       {ads.map((ad) => (
@@ -187,7 +189,7 @@ export default function AdGrid({
           {/* IMAGE */}
           <div className="h-48 bg-muted relative overflow-hidden">
             <Image
-              src={ad.images?.[0] || "/placeholder.png"}
+              src={ad.images?.[0] || "https://via.placeholder.com/400x300.png?text=No+Image"}
               alt={ad.title}
               fill
               className="object-cover transition-transform duration-700 group-hover:scale-110"

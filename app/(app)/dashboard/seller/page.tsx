@@ -302,7 +302,7 @@ function PremiumListingCard({ ad, onDelete, onMarkSold, chats }: any) {
       className="group bg-card/60 backdrop-blur-2xl p-4 sm:p-5 rounded-2xl sm:rounded-[2rem] border border-border/50 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5 transition-all duration-500 flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6"
     >
       <div className="relative w-full h-48 sm:w-32 sm:h-32 rounded-xl sm:rounded-2xl overflow-hidden shrink-0 shadow-sm border border-border/50 group-hover:border-primary/20 transition-colors bg-muted">
-        <Image src={ad.images?.[0] || "/placeholder.png"} fill className="object-cover group-hover:scale-105 transition-transform duration-700" alt="listing" />
+        <Image src={ad.images?.[0] || "/placeholder.svg"} fill className="object-cover group-hover:scale-105 transition-transform duration-700" alt="listing" />
         {ad.status === "sold" && (
           <div className="absolute inset-0 bg-background/70 backdrop-blur-[2px] flex items-center justify-center">
             <span className="text-[10px] text-foreground font-black uppercase tracking-widest border border-border px-3 py-1 rounded-full bg-card/50">Sold Out</span>

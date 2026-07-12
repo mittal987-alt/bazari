@@ -3,6 +3,7 @@ import { connectDB } from "@/lib/db";
 import { getUserFromToken } from "@/lib/auth";
 import Ad from "@/models/Ad";
 import { checkListingForFraud } from "@/lib/fraudDetection";
+import { generateEmbedding } from "@/services/ai.service";
 
 /* =========================================================
     GET SINGLE AD + INCREASE VIEWS
@@ -178,6 +179,26 @@ export async function PUT(
     });
 
     updateData.status = fraudResult.status;
+
+    // 🧠 REGENERATE EMBEDDING if any content-relevant field changed,
+    // so search relevance doesn't drift out of sync with edited listings.
+    const contentFieldsChanged =
+      body.title !== undefined ||
+      body.description !== undefined ||
+      body.category !== undefined ||
+      body.price !== undefined ||
+      body.locationName !== undefined;
+
+    if (contentFieldsChanged) {
+      const finalTitle = updateData.title ?? ad.title;
+      const finalCategory = updateData.category ?? ad.category;
+      const finalDescription = updateData.description ?? ad.description;
+      const finalPrice = updateData.price ?? ad.price;
+      const finalLocationName = updateData.locationName ?? ad.locationName;
+
+      const textToEmbed = `Title: ${finalTitle}. Category: ${finalCategory}. Description: ${finalDescription}. Price: ₹${finalPrice}. Location: ${finalLocationName}.`;
+      updateData.embedding = await generateEmbedding(textToEmbed);
+    }
 
     const updatedAd = await Ad.findByIdAndUpdate(
       id,

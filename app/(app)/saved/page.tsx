@@ -102,7 +102,7 @@ export default function SavedPage() {
                   <Link href={`/ads/${ad._id}`}>
                     <div className="relative h-64 rounded-[2rem] overflow-hidden mb-6">
                       <Image
-                        src={ad.images?.[0] || "/placeholder.png"}
+                        src={ad.images?.[0] || "/placeholder.svg"}
                         className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
                         alt={ad.title}
                         fill

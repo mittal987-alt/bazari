@@ -195,7 +195,7 @@ function AdsPageContent() {
                   >
                     <Link href={`/ads/${ad._id}`} className="group block bg-white rounded-[2.5rem] border border-slate-100 p-4 transition-all hover:shadow-2xl hover:-translate-y-1">
                       <div className="aspect-[4/3] bg-slate-100 rounded-[1.8rem] overflow-hidden mb-5 relative">
-                        <Image fill src={ad.images?.[0] || "/placeholder.png"} className="object-cover group-hover:scale-110 transition-transform duration-700" alt="" />
+                        <Image fill src={ad.images?.[0] || "/placeholder.svg"} className="object-cover group-hover:scale-110 transition-transform duration-700" alt="" />
                       </div>
                       <div className="px-2 space-y-1">
                         <p className="text-2xl font-black text-slate-900 tracking-tighter">₹{ad.price.toLocaleString()}</p>

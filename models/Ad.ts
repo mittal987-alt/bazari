@@ -53,6 +53,11 @@ const AdSchema = new mongoose.Schema(
       default: [],
     },
 
+    embedding: {
+      type: [Number],
+      default: [],
+    },
+
     // ⭐ Saved ads
     savedBy: [
       {

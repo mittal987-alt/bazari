@@ -247,7 +247,7 @@ export default function AdDetailsPage() {
                 className="w-full h-full"
               >
                 <Image
-                  src={ad.images?.[current] || "/placeholder.png"}
+                  src={ad.images?.[current] || "/placeholder.svg"}
                   alt={ad.title}
                   fill
                   className="object-cover"
@@ -514,7 +514,7 @@ export default function AdDetailsPage() {
                   {/* Image */}
                   <div className="w-24 h-24 relative rounded-2xl overflow-hidden border-2 border-white dark:border-slate-800 shadow-md mb-4 bg-white">
                     <Image
-                      src={ad.images?.[0] || "/placeholder.png"}
+                      src={ad.images?.[0] || "/placeholder.svg"}
                       alt={ad.title}
                       fill
                       className="object-cover"
