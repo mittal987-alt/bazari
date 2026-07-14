@@ -6,7 +6,7 @@
 
 A modern, full-stack marketplace platform where buyers and sellers connect through intelligent AI features, real-time messaging, and smart pricing — designed and built for India.
 
-[![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-bazari--plum.vercel.app-6C3AED?style=for-the-badge)](https://bazari-plum.vercel.app)
+[![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-https://bazari-78io.vercel.app-6C3AED?style=for-the-badge)](https://bazari-78io.vercel.app/)
 [![Next.js](https://img.shields.io/badge/Next.js-16-000000?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-97%25-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/atlas)
