@@ -297,7 +297,7 @@ This project is deployed on **Vercel** with automatic deployments on every push 
 | Images | [Cloudinary](https://cloudinary.com) |
 | Socket Server | Self-hosted / Railway |
 
-> **Live URL:** [bazari-plum.vercel.app](https://bazari-plum.vercel.app)
+> **Live URL:** [bazari-78io.vercel.app](https://bazari-78io.vercel.app)
 
 ---
 
@@ -335,6 +335,6 @@ This project is private. All rights reserved © 2025 [mittal987-alt](https://git
 
 **Built with ❤️ in India**
 
-[Live Demo](https://bazari-plum.vercel.app) · [Report Bug](https://github.com/mittal987-alt/bazaar/issues) · [Request Feature](https://github.com/mittal987-alt/bazaar/issues)
+[Live Demo](https://bazari-78io.vercel.app) · [Report Bug](https://github.com/mittal987-alt/bazaar/issues) · [Request Feature](https://github.com/mittal987-alt/bazaar/issues)
 
 </div>
