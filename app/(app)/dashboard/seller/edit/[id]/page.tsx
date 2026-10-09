@@ -138,41 +138,41 @@ export default function EditAdPage() {
 
   if (loading)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-          className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full"
+          className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full"
         />
       </div>
     );
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-slate-50">
+    <div className="min-h-screen relative overflow-hidden bg-background">
       
       {/* 🌌 PREMIUM MESH BACKGROUND */}
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-blue-400/10 blur-[120px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-indigo-400/10 blur-[120px]" />
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/10 blur-[120px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-primary/5 blur-[120px]" />
       </div>
 
       {/* 🧭 STICKY GLASS HEADER */}
-      <nav className="sticky top-0 z-50 px-6 py-4 backdrop-blur-xl bg-white/70 border-b border-slate-200/50">
+      <nav className="sticky top-0 z-50 px-6 py-4 backdrop-blur-xl bg-card/70 border-b border-border/50">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <Link href="/dashboard/seller" className="group flex items-center gap-2 p-2 hover:bg-slate-100 rounded-xl transition-all">
-            <FiArrowLeft className="group-hover:-translate-x-1 transition-transform" />
-            <span className="text-[10px] font-black uppercase tracking-widest hidden md:block">Back to Console</span>
+          <Link href="/dashboard/seller" className="group flex items-center gap-2 p-2 hover:bg-muted rounded-xl transition-all">
+            <FiArrowLeft className="group-hover:-translate-x-1 text-muted-foreground transition-transform" />
+            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground hidden md:block">Back to Console</span>
           </Link>
 
           <div className="hidden sm:flex flex-col items-center">
-            <span className="text-[8px] font-black uppercase tracking-[0.4em] text-blue-600">Product Editor</span>
-            <p className="font-bold text-slate-900 text-sm truncate max-w-[200px]">{form.title || "Untitled Listing"}</p>
+            <span className="text-[8px] font-black uppercase tracking-[0.4em] text-primary">Product Editor</span>
+            <p className="font-bold text-foreground text-sm truncate max-w-[200px]">{form.title || "Untitled Listing"}</p>
           </div>
 
           <button 
             onClick={handleUpdate} 
             disabled={saving} 
-            className="bg-slate-900 text-white px-8 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-slate-200 hover:bg-blue-600 transition-all flex items-center gap-2 disabled:opacity-50"
+            className="bg-primary text-primary-foreground px-8 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-primary/20 hover:bg-primary/90 transition-all flex items-center gap-2 disabled:opacity-50"
           >
             {saving ? "Saving..." : <><FiSave /> Save Changes</>}
           </button>
@@ -187,7 +187,7 @@ export default function EditAdPage() {
           {/* SECTION: GENERAL INFO */}
           <motion.section 
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-            className="bg-white p-8 md:p-12 rounded-[3rem] shadow-xl shadow-slate-200/50 border border-white"
+            className="bg-card p-8 md:p-12 rounded-[3rem] shadow-md border border-border"
           >
             <FormHeader title="Listing Details" icon={<FiTag />} />
             
@@ -199,11 +199,11 @@ export default function EditAdPage() {
             </div>
 
             <div className="mt-8 space-y-3">
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">Full Description</label>
+              <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-4">Full Description</label>
               <textarea
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
-                className="w-full bg-slate-50 border-none rounded-[2rem] p-8 min-h-[180px] font-medium text-slate-700 outline-none focus:ring-4 focus:ring-blue-500/10 focus:bg-white transition-all resize-none shadow-inner"
+                className="w-full bg-muted border-none rounded-[2rem] p-8 min-h-[180px] font-medium text-foreground outline-none focus:ring-4 focus:ring-primary/10 focus:bg-card border focus:border-primary/20 transition-all resize-none shadow-inner"
                 placeholder="Describe your item's condition, features, and why it's a great deal..."
               />
             </div>
@@ -212,11 +212,11 @@ export default function EditAdPage() {
           {/* SECTION: IMAGES */}
           <motion.section 
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-            className="bg-slate-900 p-8 md:p-12 rounded-[3rem] shadow-2xl shadow-slate-900/20"
+            className="bg-card border border-border p-8 md:p-12 rounded-[3rem] shadow-xl"
           >
             <div className="flex justify-between items-center mb-10">
               <FormHeader title="Media Gallery" icon={<FiCamera />} light />
-              <label className="cursor-pointer bg-blue-600 hover:bg-white hover:text-blue-600 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all text-white">
+              <label className="cursor-pointer bg-primary hover:bg-primary/90 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all text-primary-foreground">
                 Add Images
                 <input type="file" multiple hidden onChange={(e) => e.target.files && handleImageUpload(e.target.files)} />
               </label>
@@ -225,17 +225,17 @@ export default function EditAdPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <AnimatePresence mode="popLayout">
                 {images.map((img, i) => (
-                  <motion.div key={img} layout initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }} className="relative aspect-square rounded-2xl overflow-hidden group border border-white/10 shadow-lg">
+                  <motion.div key={img} layout initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }} className="relative aspect-square rounded-2xl overflow-hidden group border border-border shadow-lg bg-muted">
                     <img src={img} className="w-full h-full object-cover" alt="" />
-                    <button onClick={() => setImages(images.filter((item) => item !== img))} className="absolute top-2 right-2 w-8 h-8 bg-rose-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                    <button onClick={() => setImages(images.filter((item) => item !== img))} className="absolute top-2 right-2 w-8 h-8 bg-rose-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 shadow-lg">
                       <FiTrash2 size={14} />
                     </button>
-                    {i === 0 && <div className="absolute bottom-2 left-2 bg-blue-600 text-[8px] font-black uppercase px-2 py-1 rounded-md text-white shadow-md">Main Photo</div>}
+                    {i === 0 && <div className="absolute bottom-2 left-2 bg-primary text-[8px] font-black uppercase px-2 py-1 rounded-md text-primary-foreground shadow-md">Main Photo</div>}
                   </motion.div>
                 ))}
               </AnimatePresence>
               {uploading && (
-                <div className="aspect-square rounded-2xl border-2 border-dashed border-slate-700 flex flex-col items-center justify-center text-slate-500 animate-pulse bg-white/5">
+                <div className="aspect-square rounded-2xl border-2 border-dashed border-border flex flex-col items-center justify-center text-muted-foreground animate-pulse bg-muted/50">
                   <FiCamera />
                   <span className="text-[8px] font-black mt-2">Processing...</span>
                 </div>
@@ -246,10 +246,10 @@ export default function EditAdPage() {
 
         {/* --- 🛡️ RIGHT COLUMN: TIPS & DELETION --- */}
         <aside className="lg:col-span-4 space-y-6">
-          <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
-            <div className="flex items-center gap-3 text-blue-600 mb-6">
+          <div className="bg-card p-8 rounded-[2.5rem] border border-border shadow-sm">
+            <div className="flex items-center gap-3 text-primary mb-6">
               <FiInfo />
-              <h3 className="text-xs font-black uppercase tracking-widest text-slate-900">Optimization Tips</h3>
+              <h3 className="text-xs font-black uppercase tracking-widest text-foreground">Optimization Tips</h3>
             </div>
             <ul className="space-y-4">
               <EditorTip text="Keep titles concise but descriptive." />
@@ -258,17 +258,17 @@ export default function EditAdPage() {
             </ul>
           </div>
 
-          <div className="bg-rose-50 p-8 rounded-[2.5rem] border border-rose-100">
-             <h3 className="text-xs font-black uppercase tracking-widest text-rose-900 mb-4 flex items-center gap-2">
+          <div className="bg-rose-500/10 p-8 rounded-[2.5rem] border border-rose-500/20">
+             <h3 className="text-xs font-black uppercase tracking-widest text-rose-500 mb-4 flex items-center gap-2">
                <FiTrash2 /> Dangerous Territory
              </h3>
-             <p className="text-[11px] font-bold text-rose-700/70 mb-6 leading-relaxed">
+             <p className="text-[11px] font-bold text-rose-500/80 mb-6 leading-relaxed">
                Deleting this ad is irreversible. You will lose all current inquiries and traffic data associated with this listing.
              </p>
              <button 
               onClick={handleDelete} 
               disabled={deleting}
-              className="w-full py-4 bg-white border border-rose-200 text-rose-600 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-rose-600 hover:text-white transition-all shadow-sm shadow-rose-100 disabled:opacity-50"
+              className="w-full py-4 bg-card border border-rose-500/30 text-rose-500 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-rose-600 hover:text-white transition-all shadow-sm disabled:opacity-50"
              >
                {deleting ? "Removing Ad..." : "Delete Permanently"}
              </button>
@@ -283,8 +283,8 @@ export default function EditAdPage() {
 
 function FormHeader({ title, icon, light }: any) {
   return (
-    <div className={`flex items-center gap-3 ${light ? 'text-white' : 'text-slate-900'}`}>
-      <span className={`p-3 rounded-xl ${light ? 'bg-white/10 text-blue-400' : 'bg-blue-50 text-blue-600'}`}>{icon}</span>
+    <div className={`flex items-center gap-3 text-foreground`}>
+      <span className={`p-3 rounded-xl bg-primary/10 text-primary`}>{icon}</span>
       <h2 className="text-xl font-black tracking-tight uppercase italic">{title}</h2>
     </div>
   );
@@ -294,7 +294,7 @@ function EditorTip({ text }: { text: string }) {
   return (
     <li className="flex items-start gap-3">
       <FiCheckCircle className="text-emerald-500 mt-1 shrink-0" />
-      <p className="text-xs font-bold text-slate-500 leading-tight">{text}</p>
+      <p className="text-xs font-bold text-muted-foreground leading-tight">{text}</p>
     </li>
   );
 }
@@ -302,10 +302,10 @@ function EditorTip({ text }: { text: string }) {
 function EditInput({ label, value, onChange, icon, ...props }: any) {
   return (
     <div className="space-y-3">
-      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">{label}</label>
+      <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-4">{label}</label>
       <div className="relative group">
         {icon && (
-          <div className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-600 transition-colors z-10">
+          <div className="absolute left-6 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors z-10">
             {icon}
           </div>
         )}
@@ -313,7 +313,7 @@ function EditInput({ label, value, onChange, icon, ...props }: any) {
           {...props} 
           value={value} 
           onChange={(e) => onChange(e.target.value)}
-          className={`${icon ? "pl-14" : "px-8"} w-full py-5 bg-slate-50 border-none rounded-[1.5rem] font-bold text-slate-900 outline-none focus:ring-4 focus:ring-blue-500/10 focus:bg-white transition-all shadow-inner`}
+          className={`${icon ? "pl-14" : "px-8"} w-full py-5 bg-muted border border-transparent rounded-[1.5rem] font-bold text-foreground outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/20 focus:bg-card transition-all shadow-inner`}
         />
       </div>
     </div>

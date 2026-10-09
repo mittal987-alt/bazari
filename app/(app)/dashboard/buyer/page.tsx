@@ -431,7 +431,7 @@ export default function BuyerDashboard() {
               accentColor="hsl(var(--luxury-rose))"
               bgGradient="from-[hsl(var(--luxury-rose)/0.07)] via-card/40 to-card/10"
             >
-              <AdGrid search={search} type="saved" limit={2} hoverEffect="lift" compact />
+              <AdGrid search={search} type="saved" limit={4} layout="horizontal" hoverEffect="lift" compact />
             </LuxeSection>
 
             <LuxeSection
@@ -442,7 +442,7 @@ export default function BuyerDashboard() {
               accentColor="hsl(var(--luxury-violet))"
               bgGradient="from-[hsl(var(--luxury-violet)/0.07)] via-card/40 to-card/10"
             >
-              <AdGrid search={search} type="nearby" limit={2} hoverEffect="lift" compact />
+              <AdGrid search={search} type="nearby" limit={4} layout="horizontal" hoverEffect="lift" compact />
             </LuxeSection>
           </div>
 
@@ -455,7 +455,7 @@ export default function BuyerDashboard() {
             accentColor="hsl(var(--primary))"
             bgGradient="from-primary/5 via-card/30 to-card/5"
           >
-            <AdGrid search={search} category={activeCategory} type="trending" hoverEffect="lift" limit={8} compact />
+            <AdGrid search={search} category={activeCategory} type="trending" hoverEffect="lift" limit={8} />
           </LuxeSection>
 
           {/* Bottom spacer for mobile nav bars */}

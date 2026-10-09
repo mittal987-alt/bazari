@@ -115,13 +115,13 @@ function AdsPageContent() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFDFD] text-slate-900 pb-20">
+    <div className="min-h-screen bg-background text-foreground pb-20">
       
       {/* 🌌 AMBIENT TOP BAR */}
-      <div className="bg-white border-b border-slate-100 sticky top-0 z-30 py-4 px-4 md:px-8 shadow-sm backdrop-blur-md bg-white/80">
+      <div className="bg-card/80 border-b border-border sticky top-0 z-30 py-4 px-4 md:px-8 shadow-sm backdrop-blur-md">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
-           <h1 className="text-xl md:text-2xl font-black tracking-tighter uppercase">Marketplace<span className="text-blue-600">.</span></h1>
-           <div className="text-[10px] font-black uppercase text-slate-400 tracking-widest bg-slate-50 px-4 py-1.5 rounded-full border border-slate-100 whitespace-nowrap">
+           <h1 className="text-xl md:text-2xl font-black tracking-tighter uppercase">Marketplace<span className="text-primary">.</span></h1>
+           <div className="text-[10px] font-black uppercase text-muted-foreground tracking-widest bg-muted px-4 py-1.5 rounded-full border border-border whitespace-nowrap">
              {ads.length} Items Found
            </div>
         </div>
@@ -131,9 +131,9 @@ function AdsPageContent() {
 
         {/* --- 🔎 PREMIUM SIDEBAR --- */}
         <aside className="lg:col-span-3">
-          <div className="sticky top-28 space-y-6 md:space-y-8 bg-white p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] border border-slate-100 shadow-[0_20px_50px_rgba(0,0,0,0.02)]">
+          <div className="sticky top-28 space-y-6 md:space-y-8 bg-card p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] border border-border shadow-sm">
             
-            <div className="flex items-center gap-2 text-blue-600 mb-2">
+            <div className="flex items-center gap-2 text-primary mb-2">
                <FiFilter />
                <h2 className="text-xs font-black uppercase tracking-[0.2em]">Filter Engine</h2>
             </div>
@@ -143,7 +143,7 @@ function AdsPageContent() {
               <SidebarInput icon={<FiMapPin />} placeholder="All Cities" value={city} onChange={setCity} />
               
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Budget Range</label>
+                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Budget Range</label>
                 <div className="flex gap-2">
                   <SidebarInput placeholder="Min" value={min} onChange={setMin} isSmall />
                   <SidebarInput placeholder="Max" value={max} onChange={setMax} isSmall />
@@ -151,13 +151,13 @@ function AdsPageContent() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Sort By</label>
+                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Sort By</label>
                 <div className="relative group">
-                   <FiChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                   <FiChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
                    <select 
                      value={sort} 
                      onChange={(e) => setSort(e.target.value)}
-                     className="w-full bg-slate-50 border-none rounded-2xl px-5 py-4 text-xs font-bold outline-none appearance-none focus:ring-2 focus:ring-blue-100 transition-all"
+                     className="w-full bg-muted border-none rounded-2xl px-5 py-4 text-xs font-bold outline-none appearance-none focus:ring-2 focus:ring-primary/20 transition-all text-foreground"
                    >
                      <option value="">Recently Added</option>
                      <option value="price_low">Price: Low to High</option>
@@ -168,7 +168,7 @@ function AdsPageContent() {
 
               <button
                 onClick={applyFilters}
-                className="w-full bg-slate-900 text-white py-5 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:bg-blue-600 transition-all active:scale-95 flex items-center justify-center gap-2"
+                className="w-full bg-primary text-primary-foreground py-5 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:bg-primary/90 transition-all active:scale-95 flex items-center justify-center gap-2"
               >
                 Refresh Discovery
               </button>
@@ -179,9 +179,9 @@ function AdsPageContent() {
         {/* --- 🛒 LISTINGS GRID --- */}
         <main className="lg:col-span-9">
           {ads.length === 0 && !loading ? (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center py-32 bg-slate-50 rounded-[3rem] border-2 border-dashed border-slate-200">
-               <FiInbox className="text-slate-200 text-6xl mb-4" />
-               <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">No matching listings found</p>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center py-32 bg-muted/50 rounded-[3rem] border-2 border-dashed border-border">
+               <FiInbox className="text-muted-foreground/30 text-6xl mb-4" />
+               <p className="text-muted-foreground font-bold uppercase text-[10px] tracking-widest">No matching listings found</p>
             </motion.div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -193,15 +193,15 @@ function AdsPageContent() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx % 12 * 0.05 }}
                   >
-                    <Link href={`/ads/${ad._id}`} className="group block bg-white rounded-[2.5rem] border border-slate-100 p-4 transition-all hover:shadow-2xl hover:-translate-y-1">
-                      <div className="aspect-[4/3] bg-slate-100 rounded-[1.8rem] overflow-hidden mb-5 relative">
+                    <Link href={`/ads/${ad._id}`} className="group block bg-card rounded-[2.5rem] border border-border p-4 transition-all hover:shadow-2xl hover:-translate-y-1 hover:border-primary/30">
+                      <div className="aspect-[4/3] bg-muted rounded-[1.8rem] overflow-hidden mb-5 relative">
                         <Image fill src={ad.images?.[0] || "/placeholder.svg"} className="object-cover group-hover:scale-110 transition-transform duration-700" alt="" />
                       </div>
                       <div className="px-2 space-y-1">
-                        <p className="text-2xl font-black text-slate-900 tracking-tighter">₹{ad.price.toLocaleString()}</p>
-                        <h3 className="font-bold text-slate-600 truncate group-hover:text-blue-600 transition-colors uppercase tracking-tight text-sm">{ad.title}</h3>
-                        <div className="flex items-center gap-1.5 text-slate-400 pt-2 border-t border-slate-50 mt-3">
-                          <FiMapPin className="text-blue-500" size={12} />
+                        <p className="text-2xl font-black text-primary tracking-tighter">₹{ad.price.toLocaleString()}</p>
+                        <h3 className="font-bold text-foreground truncate group-hover:text-primary transition-colors uppercase tracking-tight text-sm">{ad.title}</h3>
+                        <div className="flex items-center gap-1.5 text-muted-foreground pt-2 border-t border-border mt-3">
+                          <FiMapPin className="text-primary/70" size={12} />
                           <span className="text-[10px] font-black uppercase tracking-widest">{ad.locationName || "—"}</span>
                         </div>
                       </div>
@@ -215,7 +215,7 @@ function AdsPageContent() {
           {loading && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mt-8">
                {[...Array(3)].map((_, i) => (
-                 <div key={i} className="h-80 bg-slate-100 animate-pulse rounded-[2.5rem]" />
+                 <div key={i} className="h-80 bg-muted animate-pulse rounded-[2.5rem]" />
                ))}
             </div>
           )}
@@ -225,7 +225,7 @@ function AdsPageContent() {
       {/* 🚀 SCROLL TO TOP FAB */}
       <button 
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-        className="fixed bottom-10 right-10 w-14 h-14 bg-white border border-slate-100 rounded-2xl shadow-2xl flex items-center justify-center text-slate-900 hover:bg-slate-900 hover:text-white transition-all active:scale-90"
+        className="fixed bottom-10 right-10 w-14 h-14 bg-card border border-border rounded-2xl shadow-2xl flex items-center justify-center text-foreground hover:bg-primary hover:text-primary-foreground hover:border-transparent transition-all active:scale-90"
       >
         <FiArrowUp />
       </button>
@@ -237,13 +237,13 @@ function AdsPageContent() {
 function SidebarInput({ icon, placeholder, value, onChange, isSmall = false }: SidebarInputProps) {
   return (
     <div className="relative group">
-      {icon && <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-600 transition-colors">{icon}</div>}
+      {icon && <div className="absolute left-5 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">{icon}</div>}
       <input 
         type="text" 
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className={`${icon ? 'pl-12' : 'px-5'} ${isSmall ? 'py-3' : 'py-4'} w-full bg-slate-50 border-none rounded-2xl text-xs font-bold outline-none ring-2 ring-transparent focus:ring-blue-100 focus:bg-white transition-all placeholder:text-slate-300`}
+        className={`${icon ? 'pl-12' : 'px-5'} ${isSmall ? 'py-3' : 'py-4'} w-full bg-muted border-none rounded-2xl text-xs font-bold outline-none ring-2 ring-transparent focus:ring-primary/20 focus:bg-background transition-all placeholder:text-muted-foreground/50 text-foreground`}
       />
     </div>
   );
@@ -251,7 +251,7 @@ function SidebarInput({ icon, placeholder, value, onChange, isSmall = false }: S
 
 export default function AdsPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center font-black animate-pulse">LOADING MARKETPLACE...</div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center font-black animate-pulse text-muted-foreground">LOADING MARKETPLACE...</div>}>
       <AdsPageContent />
     </Suspense>
   );

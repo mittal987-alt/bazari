@@ -16,6 +16,9 @@ type User = {
   name: string;
   email: string;
   role: "buyer" | "seller" | "admin";
+  rating?: number;
+  reviewCount?: number;
+  isTrusted?: boolean;
 };
 
 type Ad = {
@@ -161,8 +164,8 @@ export default function ProfilePage() {
               {isSeller && (
                 <StatBadge value={ads.length} label="Listings" icon={<FiPackage size={14}/>} />
               )}
-              <StatBadge value="4.9" label="Rating" icon={<FiStar size={14}/>} />
-              <StatBadge value="100%" label="Trust" icon={<FiShield size={14}/>} />
+              <StatBadge value={user.rating ? user.rating.toFixed(1) : "0"} label={`Rating (${user.reviewCount || 0})`} icon={<FiStar size={14}/>} />
+              <StatBadge value={user.isTrusted ? "100%" : "New"} label="Trust" icon={<FiShield size={14}/>} />
             </div>
           </div>
         </motion.div>

@@ -46,21 +46,21 @@ export default function SavedPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFDFD] text-slate-900 pb-20">
-      <div className="fixed top-0 right-0 w-[30%] h-[30%] bg-rose-50/50 blur-[120px] rounded-full pointer-events-none" />
+    <div className="min-h-screen bg-background text-foreground pb-20">
+      <div className="fixed top-0 right-0 w-[30%] h-[30%] bg-rose-500/10 blur-[120px] rounded-full pointer-events-none" />
 
       <div className="relative max-w-7xl mx-auto px-8 py-12">
         <header className="mb-16 space-y-4">
-          <Link href="/dashboard/buyer" className="group flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-blue-600 transition-colors">
+          <Link href="/dashboard/buyer" className="group flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground hover:text-primary transition-colors">
             <FiArrowLeft className="group-hover:-translate-x-1 transition-transform" /> Back to Lounge
           </Link>
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div>
-              <h1 className="text-6xl font-black tracking-tighter text-slate-900">
+              <h1 className="text-6xl font-black tracking-tighter text-foreground">
                 Collection<span className="text-rose-500">.</span>
               </h1>
-              <p className="text-slate-500 font-medium text-lg mt-2">
-                You have <span className="text-slate-900 font-bold">{ads.length} items</span> reserved in your wishlist.
+              <p className="text-muted-foreground font-medium text-lg mt-2">
+                You have <span className="text-foreground font-bold">{ads.length} items</span> reserved in your wishlist.
               </p>
             </div>
           </div>
@@ -69,21 +69,21 @@ export default function SavedPage() {
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-80 bg-slate-100 animate-pulse rounded-[2.5rem]" />
+              <div key={i} className="h-80 bg-muted animate-pulse rounded-[2.5rem]" />
             ))}
           </div>
         ) : ads.length === 0 ? (
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col items-center justify-center py-32 rounded-[4rem] bg-slate-50 border-2 border-dashed border-slate-200"
+            className="flex flex-col items-center justify-center py-32 rounded-[4rem] bg-muted border-2 border-dashed border-border"
           >
-            <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center shadow-xl mb-6">
-              <FiHeart className="text-rose-200 text-3xl" fill="currentColor" />
+            <div className="w-20 h-20 bg-card rounded-3xl flex items-center justify-center shadow-xl mb-6">
+              <FiHeart className="text-rose-500/30 text-3xl" fill="currentColor" />
             </div>
-            <h3 className="text-xl font-bold text-slate-800">Your gallery is empty</h3>
-            <p className="text-slate-400 font-medium mt-1">Start exploring and save items you love.</p>
-            <Link href="/dashboard/buyer" className="mt-8 bg-slate-900 text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-600 transition-all shadow-xl">
+            <h3 className="text-xl font-bold text-foreground">Your gallery is empty</h3>
+            <p className="text-muted-foreground font-medium mt-1">Start exploring and save items you love.</p>
+            <Link href="/dashboard/buyer" className="mt-8 bg-primary text-primary-foreground px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-primary/90 transition-all shadow-xl">
               Explore Marketplace
             </Link>
           </motion.div>
@@ -97,7 +97,7 @@ export default function SavedPage() {
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.8 }}
-                  className="group relative bg-white rounded-[2.5rem] border border-slate-100 p-4 transition-all duration-500 hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.08)] hover:-translate-y-2"
+                  className="group relative bg-card rounded-[2.5rem] border border-border p-4 transition-all duration-500 hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.08)] hover:-translate-y-2"
                 >
                   <Link href={`/ads/${ad._id}`}>
                     <div className="relative h-64 rounded-[2rem] overflow-hidden mb-6">
@@ -109,7 +109,7 @@ export default function SavedPage() {
                       />
                       <button
                         onClick={(e) => handleUnsave(e, ad._id)}
-                        className="absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center text-rose-500 shadow-xl opacity-0 group-hover:opacity-100 transition-all hover:bg-rose-500 hover:text-white"
+                        className="absolute top-4 right-4 w-10 h-10 bg-card/90 backdrop-blur-md rounded-full flex items-center justify-center text-rose-500 shadow-xl opacity-0 group-hover:opacity-100 transition-all hover:bg-rose-500 hover:text-white"
                       >
                         <FiTrash2 size={18} />
                       </button>
@@ -117,18 +117,18 @@ export default function SavedPage() {
 
                     <div className="px-3 space-y-2">
                       <div className="flex justify-between items-start">
-                        <p className="text-2xl font-black text-slate-900 tracking-tighter">
+                        <p className="text-2xl font-black text-primary tracking-tighter">
                           ₹{ad.price.toLocaleString()}
                         </p>
-                        <div className="bg-emerald-50 text-emerald-600 text-[10px] font-black px-2 py-1 rounded-md uppercase tracking-widest">
+                        <div className="bg-emerald-500/10 text-emerald-500 text-[10px] font-black px-2 py-1 rounded-md uppercase tracking-widest">
                           Available
                         </div>
                       </div>
-                      <h3 className="font-bold text-slate-700 text-lg line-clamp-1 group-hover:text-blue-600 transition-colors">
+                      <h3 className="font-bold text-foreground text-lg line-clamp-1 group-hover:text-primary transition-colors">
                         {ad.title}
                       </h3>
-                      <div className="flex items-center gap-2 text-slate-400">
-                        <FiMapPin size={14} className="text-blue-500" />
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <FiMapPin size={14} className="text-primary/70" />
                         {/* ✅ FIX: Render ad.locationName string instead of location object */}
                         <span className="text-[10px] font-black uppercase tracking-[0.1em]">{ad.locationName || "Location Not Set"}</span>
                       </div>

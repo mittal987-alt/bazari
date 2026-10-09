@@ -183,7 +183,7 @@ export default function AdDetailsPage() {
   if (loading)
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-primary"></div>
       </div>
     );
 
@@ -195,11 +195,11 @@ export default function AdDetailsPage() {
   const hasJoined = !!user?.id && (ad.groupBuyers || []).includes(user.id);
 
   return (
-    <div className="min-h-screen bg-[#FDFDFD] pb-20">
+    <div className="min-h-screen bg-background text-foreground pb-20">
       <div className="max-w-7xl mx-auto px-8 py-6">
         <Link
           href="/ads"
-          className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-blue-600 transition-colors"
+          className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors"
         >
           <FiChevronLeft /> Back to Marketplace
         </Link>
@@ -207,26 +207,26 @@ export default function AdDetailsPage() {
 
       <div className="max-w-7xl mx-auto px-8 mb-8">
         {ad.status === "spam" && (
-          <div className="bg-rose-50 border-2 border-rose-200 p-6 rounded-[2rem] flex items-center gap-6 shadow-xl shadow-rose-500/5 animate-in fade-in slide-in-from-top-4 duration-500">
+          <div className="bg-rose-500/10 border-2 border-rose-500/20 p-6 rounded-[2rem] flex items-center gap-6 shadow-xl shadow-rose-500/5 animate-in fade-in slide-in-from-top-4 duration-500">
             <div className="w-16 h-16 bg-rose-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-rose-200 shrink-0">
                <FiShield size={32} />
             </div>
             <div>
-              <h2 className="text-xl font-black text-rose-900 tracking-tight">Potentially Fraudulent Listing</h2>
-              <p className="text-sm font-bold text-rose-700/80 leading-relaxed uppercase tracking-widest mt-1">
+              <h2 className="text-xl font-black text-rose-500 tracking-tight">Potentially Fraudulent Listing</h2>
+              <p className="text-sm font-bold text-rose-400 leading-relaxed uppercase tracking-widest mt-1">
                 This item has been flagged by our professional security system. Proceed with extreme caution.
               </p>
             </div>
           </div>
         )}
         {ad.status === "pending" && (
-          <div className="bg-amber-50 border-2 border-amber-200 p-6 rounded-[2rem] flex items-center gap-6 shadow-xl shadow-amber-500/5 animate-in fade-in slide-in-from-top-4 duration-500">
+          <div className="bg-amber-500/10 border-2 border-amber-500/20 p-6 rounded-[2rem] flex items-center gap-6 shadow-xl shadow-amber-500/5 animate-in fade-in slide-in-from-top-4 duration-500">
             <div className="w-16 h-16 bg-amber-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-amber-200 shrink-0">
                <FiShield size={32} />
             </div>
             <div>
-              <h2 className="text-xl font-black text-amber-900 tracking-tight">Under Professional Review</h2>
-              <p className="text-sm font-bold text-amber-700/80 leading-relaxed uppercase tracking-widest mt-1">
+              <h2 className="text-xl font-black text-amber-500 tracking-tight">Under Professional Review</h2>
+              <p className="text-sm font-bold text-amber-400 leading-relaxed uppercase tracking-widest mt-1">
                 Our team is currently verifying this listing. Some details may be inaccurate.
               </p>
             </div>
@@ -236,7 +236,7 @@ export default function AdDetailsPage() {
 
       <div className="max-w-7xl mx-auto px-8 grid grid-cols-1 lg:grid-cols-12 gap-16">
         <div className="lg:col-span-7 space-y-6">
-          <div className="relative aspect-[16/10] rounded-[3rem] overflow-hidden bg-slate-100 shadow-2xl group">
+          <div className="relative aspect-[16/10] rounded-[3rem] overflow-hidden bg-muted shadow-2xl group">
             <AnimatePresence mode="wait">
               <motion.div
                 key={current}
@@ -267,72 +267,72 @@ export default function AdDetailsPage() {
 
         <div className="lg:col-span-5 space-y-8">
           <div className="space-y-4">
-            <h1 className="text-4xl font-black tracking-tighter text-slate-900 leading-tight">
+            <h1 className="text-4xl font-black tracking-tighter text-foreground leading-tight">
               {ad.title}
             </h1>
 
-            <div className="flex items-center gap-6 text-slate-400 font-bold text-sm">
-              <span className="flex items-center gap-1.5"><FiMapPin className="text-blue-600" /> {ad.locationName || "Remote"}</span>
-              <span className="flex items-center gap-1.5"><FiClock className="text-blue-600" /> {ad.yearsUsed} Years Used</span>
+            <div className="flex items-center gap-6 text-muted-foreground font-bold text-sm">
+              <span className="flex items-center gap-1.5"><FiMapPin className="text-primary" /> {ad.locationName || "Remote"}</span>
+              <span className="flex items-center gap-1.5"><FiClock className="text-primary" /> {ad.yearsUsed} Years Used</span>
             </div>
 
-            <p className="text-5xl font-black text-blue-600 tracking-tighter pt-2">
+            <p className="text-5xl font-black text-primary tracking-tighter pt-2">
               ₹{ad.price.toLocaleString("en-IN")}
             </p>
 
             {/* ── Price Estimator CTA ── */}
             <Link
               href={`/price-estimator?product=${encodeURIComponent(ad.title)}&mode=buying`}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-50 border border-indigo-100 hover:bg-indigo-100 hover:border-indigo-300 text-indigo-700 transition-all group w-fit"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 hover:bg-indigo-500/20 text-indigo-400 transition-all group w-fit"
             >
-              <FiTrendingUp size={15} className="text-indigo-500 group-hover:scale-110 transition-transform" />
-              <span className="text-xs font-bold">Is this a fair price?</span>
-              <span className="text-[10px] font-black uppercase tracking-widest text-indigo-400 group-hover:text-indigo-600 transition-colors">Check with AI Estimator →</span>
+              <FiTrendingUp size={15} className="text-indigo-400 group-hover:scale-110 transition-transform" />
+              <span className="text-xs font-bold text-indigo-400">Is this a fair price?</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-indigo-400/80 group-hover:text-indigo-400 transition-colors">Check with AI Estimator →</span>
             </Link>
           </div>
 
           {ad.isGroupBuy && ad.groupBuyTarget && (
-            <div className="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-100 rounded-[2rem] p-6 shadow-sm">
+            <div className="bg-gradient-to-br from-primary/10 to-purple-500/10 border-2 border-primary/20 rounded-[2rem] p-6 shadow-sm">
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h3 className="text-sm font-black text-purple-900 tracking-tight flex items-center gap-2">
-                     <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></span> Group Buy Active
+                  <h3 className="text-sm font-black text-primary tracking-tight flex items-center gap-2">
+                     <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span> Group Buy Active
                   </h3>
-                  <p className="text-[10px] font-bold text-purple-700/70 uppercase tracking-widest mt-1">Unlock massive savings</p>
+                  <p className="text-[10px] font-bold text-primary/70 uppercase tracking-widest mt-1">Unlock massive savings</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-2xl font-black text-purple-600 tracking-tighter">₹{(ad.groupBuyPrice || 0).toLocaleString("en-IN")}</p>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest line-through">₹{ad.price.toLocaleString("en-IN")}</p>
+                  <p className="text-2xl font-black text-primary tracking-tighter">₹{(ad.groupBuyPrice || 0).toLocaleString("en-IN")}</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest line-through">₹{ad.price.toLocaleString("en-IN")}</p>
                 </div>
               </div>
 
               <div className="space-y-3 mb-6">
-                 <div className="w-full h-3 bg-purple-200/50 rounded-full overflow-hidden">
+                 <div className="w-full h-3 bg-primary/20 rounded-full overflow-hidden">
                     <div 
-                      className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-1000"
+                      className="h-full bg-gradient-to-r from-primary to-purple-500 rounded-full transition-all duration-1000"
                       style={{ width: `${Math.min(100, ((ad.groupBuyers?.length || 0) / ad.groupBuyTarget) * 100)}%` }}
                     />
                  </div>
                  <div className="flex justify-between text-[11px] font-black uppercase tracking-widest">
-                    <span className="text-purple-600">{ad.groupBuyers?.length || 0} Joined</span>
-                    <span className="text-slate-400">Target: {ad.groupBuyTarget}</span>
+                    <span className="text-primary">{ad.groupBuyers?.length || 0} Joined</span>
+                    <span className="text-muted-foreground">Target: {ad.groupBuyTarget}</span>
                  </div>
               </div>
 
               {loadingInsight ? (
-                <div className="mb-6 flex items-center gap-2 text-[10px] font-black uppercase text-purple-400 animate-pulse">
+                <div className="mb-6 flex items-center gap-2 text-[10px] font-black uppercase text-primary animate-pulse">
                   <FiLoader className="animate-spin" /> AI Analyzing Marketplace...
                 </div>
               ) : pricingInsight && (
-                <div className="mb-6 bg-white/50 border border-purple-100 rounded-2xl p-4 relative overflow-hidden group">
-                  <div className="absolute top-0 right-0 w-16 h-16 bg-purple-500/5 blur-xl group-hover:bg-purple-500/10 transition-colors"></div>
+                <div className="mb-6 bg-card/50 border border-primary/20 rounded-2xl p-4 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-16 h-16 bg-primary/10 blur-xl group-hover:bg-primary/20 transition-colors"></div>
                   <div className="flex gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-purple-600 text-white flex items-center justify-center shrink-0 shadow-lg shadow-purple-200">
+                    <div className="w-8 h-8 rounded-lg bg-primary text-white flex items-center justify-center shrink-0 shadow-lg shadow-primary/20">
                        <FiZap size={14} className="fill-current" />
                     </div>
                     <div className="space-y-1">
-                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-purple-600">AI Pricing Assistant</p>
-                      <p className="text-xs font-bold text-slate-700 leading-relaxed italic">
+                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">AI Pricing Assistant</p>
+                      <p className="text-xs font-bold text-foreground leading-relaxed italic">
                         "{pricingInsight.explanation}"
                       </p>
                     </div>
@@ -345,10 +345,10 @@ export default function AdDetailsPage() {
                 disabled={joiningGroupBuy || isOwner || hasJoined}
                 className={`w-full py-4 rounded-xl font-black text-[11px] uppercase tracking-widest shadow-lg transition-all flex items-center justify-center gap-2 ${
                   hasJoined
-                    ? "bg-purple-600 text-white cursor-default"
+                    ? "bg-primary text-primary-foreground cursor-default"
                     : isOwner 
-                      ? "bg-purple-100 text-purple-400 cursor-not-allowed" 
-                      : "bg-purple-600 text-white hover:bg-purple-700 hover:shadow-purple-500/20 active:scale-95"
+                      ? "bg-primary/20 text-primary cursor-not-allowed" 
+                      : "bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-primary/20 active:scale-95"
                 }`}
               >
                 {joiningGroupBuy && <FiLoader className="animate-spin" />}
@@ -360,7 +360,7 @@ export default function AdDetailsPage() {
 
               <button
                 onClick={() => setShowInviteModal(true)}
-                className="mt-3 w-full py-4 rounded-xl font-black text-[11px] uppercase tracking-widest bg-white hover:bg-slate-50 border border-purple-200 text-purple-600 shadow-sm transition-all flex items-center justify-center gap-2 active:scale-95"
+                className="mt-3 w-full py-4 rounded-xl font-black text-[11px] uppercase tracking-widest bg-card hover:bg-muted border border-primary/20 text-primary shadow-sm transition-all flex items-center justify-center gap-2 active:scale-95"
               >
                 <FiShare2 /> Invite Friends to Save
               </button>
@@ -371,7 +371,7 @@ export default function AdDetailsPage() {
             {isOwner ? (
               <button
                 onClick={() => router.push("/dashboard/seller")}
-                className="w-full py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl transition-all flex items-center justify-center gap-3 bg-blue-100 text-blue-600 hover:bg-blue-200 active:scale-[0.98]"
+                className="w-full py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl transition-all flex items-center justify-center gap-3 bg-primary/10 text-primary hover:bg-primary/20 active:scale-[0.98]"
               >
                 <FiMessageSquare size={18} /> 
                 View Inquiries
@@ -380,7 +380,7 @@ export default function AdDetailsPage() {
               <button
                 onClick={handleStartChat}
                 disabled={startingChat}
-                className="w-full py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl transition-all flex items-center justify-center gap-3 bg-slate-900 text-white hover:bg-blue-600 active:scale-[0.98]"
+                className="w-full py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl transition-all flex items-center justify-center gap-3 bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98]"
               >
                 <FiMessageSquare size={18} /> 
                 {startingChat ? "Opening Chat..." : "Start Conversation"}
@@ -392,48 +392,48 @@ export default function AdDetailsPage() {
                 onClick={handleSave}
                 disabled={saving}
                 className={`flex-1 py-5 rounded-2xl font-black text-[10px] uppercase tracking-widest border transition-all flex items-center justify-center gap-2 ${
-                  saved ? "bg-rose-50 text-rose-600 border-rose-100" : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+                  saved ? "bg-rose-500/10 text-rose-500 border-rose-500/20" : "bg-card border-border text-muted-foreground hover:bg-muted"
                 }`}
               >
                 <FiHeart fill={saved ? "currentColor" : "none"} />
                 {saved ? "Saved" : "Save Listing"}
               </button>
 
-              <button onClick={handleShare} className="px-8 py-5 rounded-2xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all">
+              <button onClick={handleShare} className="px-8 py-5 rounded-2xl border border-border text-muted-foreground hover:bg-muted transition-all">
                 <FiShare2 />
               </button>
 
-              <button onClick={handleNavigate} className="px-8 py-5 rounded-2xl border border-emerald-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all">
+              <button onClick={handleNavigate} className="px-8 py-5 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-600 hover:text-white transition-all">
                 <FiNavigation />
               </button>
             </div>
           </div>
 
-          <hr className="border-slate-100" />
+          <hr className="border-border" />
 
           {/* Location Card */}
-          <div className="bg-emerald-50/60 border border-emerald-100 rounded-[2rem] p-6 space-y-3">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-700">📍 Seller Location</h3>
-            <p className="text-slate-700 font-bold text-sm">{ad.locationName || "Location not specified"}</p>
+          <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-[2rem] p-6 space-y-3">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-500">📍 Seller Location</h3>
+            <p className="text-foreground font-bold text-sm">{ad.locationName || "Location not specified"}</p>
             <button onClick={handleNavigate} className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-black uppercase tracking-widest px-5 py-3 rounded-xl transition-all shadow-md">
               <FiNavigation size={14} /> Get Directions
             </button>
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Description</h3>
-            <p className="text-slate-600 leading-relaxed font-medium">{ad.description}</p>
+            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">Description</h3>
+            <p className="text-muted-foreground leading-relaxed font-medium">{ad.description}</p>
           </div>
 
           <div className={`p-6 rounded-[2rem] border flex flex-col gap-4 ${
             !ad.fraudCheck || ad.fraudCheck.score < 5
-              ? "bg-emerald-50/60 border-emerald-100" 
+              ? "bg-emerald-500/5 border-emerald-500/20" 
               : ad.fraudCheck.score < 7
-                ? "bg-amber-50/60 border-amber-100"
-                : "bg-rose-50/60 border-rose-100"
+                ? "bg-amber-500/5 border-amber-500/20"
+                : "bg-rose-500/5 border-rose-500/20"
           }`}>
             <div className="flex gap-4">
-              <div className={`w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm shrink-0 ${
+              <div className={`w-12 h-12 bg-card rounded-xl flex items-center justify-center shadow-sm shrink-0 ${
                 !ad.fraudCheck || ad.fraudCheck.score < 5
                   ? "text-emerald-500" 
                   : ad.fraudCheck.score < 7
@@ -445,10 +445,10 @@ export default function AdDetailsPage() {
               <div className="space-y-1">
                 <h4 className={`font-black text-xs uppercase tracking-widest ${
                   !ad.fraudCheck || ad.fraudCheck.score < 5
-                    ? "text-emerald-900" 
+                    ? "text-emerald-500" 
                     : ad.fraudCheck.score < 7
-                      ? "text-amber-900"
-                      : "text-rose-900"
+                      ? "text-amber-500"
+                      : "text-rose-500"
                 }`}>
                   {!ad.fraudCheck || ad.fraudCheck.score < 5
                     ? "Bazaari Shield: High Trust" 
@@ -457,7 +457,7 @@ export default function AdDetailsPage() {
                       : "Bazaari Shield: Security Warning"
                   }
                 </h4>
-                <p className="text-[10px] font-bold text-slate-500 leading-relaxed uppercase tracking-wider">
+                <p className="text-[10px] font-bold text-muted-foreground leading-relaxed uppercase tracking-wider">
                   {!ad.fraudCheck || ad.fraudCheck.score < 5
                     ? "Safe listing. Matches all standard security parameters." 
                     : ad.fraudCheck.score < 7
@@ -469,11 +469,11 @@ export default function AdDetailsPage() {
             </div>
 
             {ad.fraudCheck && ad.fraudCheck.reasons && ad.fraudCheck.reasons.length > 0 && (
-              <div className="mt-2 pt-4 border-t border-dashed border-slate-200/60 space-y-2">
-                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">AI Risk Indicators:</p>
+              <div className="mt-2 pt-4 border-t border-dashed border-border/60 space-y-2">
+                <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">AI Risk Indicators:</p>
                 <ul className="space-y-1.5">
                   {ad.fraudCheck.reasons.map((reason, idx) => (
-                    <li key={idx} className="text-[10px] font-medium text-slate-600 flex items-start gap-2">
+                    <li key={idx} className="text-[10px] font-medium text-muted-foreground flex items-start gap-2">
                       <span className={`w-1.5 h-1.5 rounded-full shrink-0 mt-1.5 ${ad.fraudCheck!.score < 7 ? "bg-amber-400" : "bg-rose-400"}`}></span>
                       {reason}
                     </li>
@@ -488,12 +488,12 @@ export default function AdDetailsPage() {
       {/* Invite Modal */}
       <AnimatePresence>
         {showInviteModal && (
-          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-background/80 backdrop-blur-md">
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white dark:bg-slate-950 rounded-[2.5rem] w-full max-w-md overflow-hidden border border-slate-200 dark:border-slate-800 shadow-2xl relative text-slate-900 dark:text-white"
+              className="bg-card rounded-[2.5rem] w-full max-w-md overflow-hidden border border-border shadow-2xl relative text-foreground"
             >
               {/* Neon Accent Header */}
               <div className="h-2 w-full bg-gradient-to-r from-[hsl(var(--luxury-violet))] to-[hsl(var(--luxury-rose))]" />
@@ -501,18 +501,18 @@ export default function AdDetailsPage() {
               <div className="p-8 space-y-6">
                 <div className="text-center space-y-1">
                   <h3 className="text-xl font-black tracking-tight uppercase">Co-Buy Invite Ticket</h3>
-                  <p className="text-[9px] font-black tracking-widest text-slate-400 uppercase">Save Together on Bazaari</p>
+                  <p className="text-[9px] font-black tracking-widest text-muted-foreground uppercase">Save Together on Bazaari</p>
                 </div>
 
                 {/* Styled Ticket graphic card */}
-                <div className="bg-slate-50 dark:bg-slate-905/40 p-6 rounded-[2rem] border border-slate-200/60 dark:border-slate-800/60 relative overflow-hidden flex flex-col items-center text-center shadow-inner">
+                <div className="bg-muted/40 p-6 rounded-[2rem] border border-border/60 relative overflow-hidden flex flex-col items-center text-center shadow-inner">
                   {/* Left Notch */}
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-3 w-6 h-6 rounded-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800" />
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-3 w-6 h-6 rounded-full bg-card border border-border" />
                   {/* Right Notch */}
-                  <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-3 w-6 h-6 rounded-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800" />
+                  <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-3 w-6 h-6 rounded-full bg-card border border-border" />
                   
                   {/* Image */}
-                  <div className="w-24 h-24 relative rounded-2xl overflow-hidden border-2 border-white dark:border-slate-800 shadow-md mb-4 bg-white">
+                  <div className="w-24 h-24 relative rounded-2xl overflow-hidden border-2 border-border shadow-md mb-4 bg-muted">
                     <Image
                       src={ad.images?.[0] || "/placeholder.svg"}
                       alt={ad.title}
@@ -524,21 +524,21 @@ export default function AdDetailsPage() {
                   <h4 className="font-black text-sm uppercase tracking-tight max-w-[220px] truncate">{ad.title}</h4>
                   
                   <div className="flex items-center gap-2 mt-2">
-                    <span className="text-[10px] bg-purple-100 dark:bg-purple-900/30 px-2.5 py-1 rounded-full font-black text-purple-600 uppercase tracking-widest">
+                    <span className="text-[10px] bg-primary/20 px-2.5 py-1 rounded-full font-black text-primary uppercase tracking-widest">
                       Save {Math.round((1 - (ad.groupBuyPrice || ad.price) / ad.price) * 100)}%
                     </span>
-                    <span className="text-[10px] bg-slate-200 dark:bg-slate-800 px-2.5 py-1 rounded-full font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest">
+                    <span className="text-[10px] bg-muted px-2.5 py-1 rounded-full font-black text-muted-foreground uppercase tracking-widest">
                       {(ad.groupBuyTarget ?? 0) - (ad.groupBuyers?.length || 0)} Slots Left
                     </span>
                   </div>
 
                   {/* Dashed Separator Line */}
-                  <div className="w-full border-t border-dashed border-slate-300 dark:border-slate-700 my-4" />
+                  <div className="w-full border-t border-dashed border-border my-4" />
 
-                  <div className="flex justify-between w-full px-2 text-[10px] font-black uppercase text-slate-400 tracking-wider">
+                  <div className="flex justify-between w-full px-2 text-[10px] font-black uppercase text-muted-foreground tracking-wider">
                     <div className="text-left">
                       <p>Deal Price</p>
-                      <p className="text-purple-600 text-sm mt-0.5">₹{ad.groupBuyPrice?.toLocaleString()}</p>
+                      <p className="text-primary text-sm mt-0.5">₹{ad.groupBuyPrice?.toLocaleString()}</p>
                     </div>
                     <div className="text-right">
                       <p>Retail Value</p>
@@ -553,14 +553,14 @@ export default function AdDetailsPage() {
                       const shareText = `Hey! I joined a Group Buy for "${ad.title}" on Bazaari. If we get ${ad.groupBuyTarget} people to join, we get it for only ₹${ad.groupBuyPrice?.toLocaleString()} (normally ₹${ad.price.toLocaleString()})! Join my group deal here: ${window.location.href}`;
                       window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`, "_blank");
                     }}
-                    className="w-full py-4 rounded-xl font-black text-[11px] uppercase tracking-widest bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-500/20 transition-all flex items-center justify-center gap-2 active:scale-95"
+                    className="w-full py-4 rounded-xl font-black text-[11px] uppercase tracking-widest bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2 active:scale-95"
                   >
                     Share on WhatsApp
                   </button>
 
                   <button
                     onClick={() => setShowInviteModal(false)}
-                    className="w-full py-4 rounded-xl font-black text-[11px] uppercase tracking-widest bg-slate-100 hover:bg-slate-200 text-slate-600 dark:text-slate-300 dark:bg-slate-800 transition-all active:scale-95"
+                    className="w-full py-4 rounded-xl font-black text-[11px] uppercase tracking-widest bg-muted hover:bg-muted/80 text-foreground transition-all active:scale-95"
                   >
                     Close Ticket
                   </button>
@@ -576,7 +576,7 @@ export default function AdDetailsPage() {
 
 function NavBtn({ icon, onClick }: { icon: any; onClick: () => void }) {
   return (
-    <button onClick={onClick} className="w-12 h-12 bg-white/90 backdrop-blur-md rounded-2xl flex items-center justify-center text-slate-900 shadow-xl hover:bg-blue-600 hover:text-white transition-all active:scale-90">
+    <button onClick={onClick} className="w-12 h-12 bg-card/90 backdrop-blur-md rounded-2xl flex items-center justify-center text-foreground shadow-xl hover:bg-primary hover:text-primary-foreground transition-all active:scale-90">
       {icon}
     </button>
   );

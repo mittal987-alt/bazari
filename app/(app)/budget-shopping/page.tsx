@@ -64,10 +64,10 @@ const BUDGET_PRESETS = [5_000, 10_000, 25_000, 50_000, 1_00_000];
 // ─────────────────────────────────────────────
 function valueScore(price: number, budget: number): { label: string; color: string; bg: string } {
   const ratio = price / budget;
-  if (ratio <= 0.6)  return { label: "🔥 Hot Deal",    color: "text-emerald-600", bg: "bg-emerald-50 border-emerald-200" };
-  if (ratio <= 0.85) return { label: "✅ Great Value",  color: "text-blue-600",    bg: "bg-blue-50 border-blue-200"       };
-  if (ratio <= 1.0)  return { label: "👍 Good Match",   color: "text-indigo-600",  bg: "bg-indigo-50 border-indigo-200"   };
-  return               { label: "⚠️ Over Budget",   color: "text-orange-600",  bg: "bg-orange-50 border-orange-200"   };
+  if (ratio <= 0.6)  return { label: "🔥 Hot Deal",    color: "text-emerald-500", bg: "bg-emerald-500/10 border-emerald-500/20" };
+  if (ratio <= 0.85) return { label: "✅ Great Value",  color: "text-blue-500",    bg: "bg-blue-500/10 border-blue-500/20"       };
+  if (ratio <= 1.0)  return { label: "👍 Good Match",   color: "text-indigo-500",  bg: "bg-indigo-500/10 border-indigo-500/20"   };
+  return               { label: "⚠️ Over Budget",   color: "text-orange-500",  bg: "bg-orange-500/10 border-orange-500/20"   };
 }
 
 function savingsPct(price: number, budget: number) {
@@ -172,7 +172,7 @@ export default function BudgetShoppingPage() {
 
   // ─────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-[#F7F8FC] pb-32">
+    <div className="min-h-screen bg-background text-foreground pb-32">
       {!mounted ? null : (
         <>
           {/* ══════════════════════════════════════
@@ -299,7 +299,7 @@ export default function BudgetShoppingPage() {
                         {r.label}
                       </button>
                     ))}
-                    <button onClick={clearRecent} className="text-slate-600 hover:text-red-400 transition-colors ml-1" title="Clear history">
+                    <button onClick={clearRecent} className="text-slate-400 hover:text-red-400 transition-colors ml-1" title="Clear history">
                       <FiX size={14} />
                     </button>
                   </div>
@@ -318,7 +318,7 @@ export default function BudgetShoppingPage() {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className="bg-white border-b border-slate-100 shadow-sm"
+                className="bg-card border-b border-border shadow-sm"
               >
                 <div className="max-w-5xl mx-auto px-5 md:px-8 py-4 flex flex-wrap gap-6 md:gap-12 text-sm">
                   <Stat icon={<FiTag className="text-blue-500" />}      label="Results Found"   value={String(recommendations.length)} />
@@ -342,13 +342,13 @@ export default function BudgetShoppingPage() {
             {loading && (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {[1, 2, 3].map(i => (
-                  <div key={i} className="bg-white rounded-3xl shadow-md overflow-hidden animate-pulse">
-                    <div className="h-48 bg-slate-100" />
+                  <div key={i} className="bg-card rounded-3xl shadow-md overflow-hidden animate-pulse">
+                    <div className="h-48 bg-muted" />
                     <div className="p-6 space-y-3">
-                      <div className="h-4 bg-slate-100 rounded-full w-3/4" />
-                      <div className="h-3 bg-slate-100 rounded-full w-full" />
-                      <div className="h-3 bg-slate-100 rounded-full w-5/6" />
-                      <div className="h-8 bg-slate-100 rounded-xl mt-4" />
+                      <div className="h-4 bg-muted rounded-full w-3/4" />
+                      <div className="h-3 bg-muted rounded-full w-full" />
+                      <div className="h-3 bg-muted rounded-full w-5/6" />
+                      <div className="h-8 bg-muted rounded-xl mt-4" />
                     </div>
                   </div>
                 ))}
@@ -358,9 +358,9 @@ export default function BudgetShoppingPage() {
             {/* Cards */}
             {!loading && recommendations.length > 0 && (
               <>
-                <p className="text-slate-500 text-sm font-semibold mb-6">
-                  AI found <span className="text-slate-800 font-bold">{recommendations.length} deals</span> matching your search
-                  {budgetNum > 0 && <> within <span className="text-blue-600 font-bold">{formatINR(budgetNum)}</span></>}
+                <p className="text-muted-foreground text-sm font-semibold mb-6">
+                  AI found <span className="text-foreground font-bold">{recommendations.length} deals</span> matching your search
+                  {budgetNum > 0 && <> within <span className="text-blue-500 font-bold">{formatINR(budgetNum)}</span></>}
                 </p>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -377,14 +377,14 @@ export default function BudgetShoppingPage() {
                           initial={{ opacity: 0, y: 30 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: i * 0.08 }}
-                          className="bg-white rounded-3xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group flex flex-col"
+                          className="bg-card border border-border rounded-3xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group flex flex-col"
                         >
                           {/* Image */}
-                          <div className="relative h-48 bg-slate-100">
+                          <div className="relative h-48 bg-muted">
                             {rec.ad?.images?.[0] ? (
                               <Image src={rec.ad.images[0]} fill className="object-cover group-hover:scale-105 transition-transform duration-500" alt={rec.name} />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center text-slate-300">
+                              <div className="w-full h-full flex items-center justify-center text-muted-foreground/30">
                                 <TbCurrencyRupee size={48} />
                               </div>
                             )}
@@ -414,27 +414,27 @@ export default function BudgetShoppingPage() {
                             {/* Category + condition */}
                             <div className="flex items-center gap-2 mb-3">
                               {rec.ad?.category && (
-                                <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md text-[10px] font-bold uppercase tracking-wide">
+                                <span className="px-2 py-0.5 bg-muted text-muted-foreground rounded-md text-[10px] font-bold uppercase tracking-wide">
                                   {rec.ad.category}
                                 </span>
                               )}
                               {rec.ad?.yearsUsed !== undefined && (
-                                <span className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded-md text-[10px] font-bold uppercase tracking-wide">
+                                <span className="px-2 py-0.5 bg-blue-500/10 text-blue-500 rounded-md text-[10px] font-bold uppercase tracking-wide">
                                   {rec.ad.yearsUsed === 0 ? "New" : `${rec.ad.yearsUsed}yr used`}
                                 </span>
                               )}
                             </div>
 
-                            <h3 className="text-lg font-bold text-slate-800 leading-snug mb-2 line-clamp-2">{rec.name}</h3>
-                            <p className="text-slate-500 text-sm leading-relaxed line-clamp-3 flex-1">{rec.reason}</p>
+                            <h3 className="text-lg font-bold text-foreground leading-snug mb-2 line-clamp-2">{rec.name}</h3>
+                            <p className="text-muted-foreground text-sm leading-relaxed line-clamp-3 flex-1">{rec.reason}</p>
 
                             {/* Price row */}
-                            <div className="mt-5 pt-4 border-t border-slate-100">
+                            <div className="mt-5 pt-4 border-t border-border">
                               <div className="flex items-end justify-between mb-3">
                                 <div>
-                                  <p className="text-2xl font-black text-slate-900">{formatINR(rec.price)}</p>
+                                  <p className="text-2xl font-black text-foreground">{formatINR(rec.price)}</p>
                                   {leftover > 0 && budgetNum > 0 && (
-                                    <p className="text-xs text-emerald-600 font-semibold mt-0.5">
+                                    <p className="text-xs text-emerald-500 font-semibold mt-0.5">
                                       {formatINR(leftover)} left from your budget
                                     </p>
                                   )}
@@ -446,13 +446,13 @@ export default function BudgetShoppingPage() {
                                 </div>
                                 {budgetNum > 0 && (
                                   <div className="text-right">
-                                    <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                    <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
                                       <div
                                         className={`h-full rounded-full ${rec.price <= budgetNum ? "bg-emerald-500" : "bg-orange-400"}`}
                                         style={{ width: `${Math.min(100, (rec.price / budgetNum) * 100)}%` }}
                                       />
                                     </div>
-                                    <p className="text-[10px] text-slate-400 mt-1 font-semibold">
+                                    <p className="text-[10px] text-muted-foreground mt-1 font-semibold">
                                       {Math.round((rec.price / budgetNum) * 100)}% of budget
                                     </p>
                                   </div>
@@ -479,12 +479,12 @@ export default function BudgetShoppingPage() {
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mt-8 p-5 bg-orange-50 border border-orange-200 rounded-2xl flex items-start gap-4"
+                    className="mt-8 p-5 bg-orange-500/10 border border-orange-500/20 rounded-2xl flex items-start gap-4"
                   >
                     <div className="text-orange-500 mt-0.5"><FiTrendingUp size={20} /></div>
                     <div>
-                      <p className="font-bold text-orange-800 text-sm">Some results are slightly over your budget</p>
-                      <p className="text-orange-700 text-xs mt-1">
+                      <p className="font-bold text-orange-500 text-sm">Some results are slightly over your budget</p>
+                      <p className="text-orange-500/80 text-xs mt-1">
                         {recommendations.length - withinBudget} item(s) exceed {formatINR(budgetNum)}. They are shown because AI rated them as relevant matches — you can negotiate the price directly with sellers.
                       </p>
                     </div>
@@ -500,11 +500,11 @@ export default function BudgetShoppingPage() {
                 animate={{ opacity: 1, y: 0 }}
                 className="text-center mt-20"
               >
-                <div className="w-24 h-24 bg-blue-50 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-inner">
+                <div className="w-24 h-24 bg-blue-500/10 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-inner">
                   <TbCurrencyRupee size={48} className="text-blue-500" />
                 </div>
-                <h2 className="text-2xl font-black text-slate-800 mb-2">Find Your Best Deal</h2>
-                <p className="text-slate-500 max-w-sm mx-auto text-sm leading-relaxed">
+                <h2 className="text-2xl font-black text-foreground mb-2">Find Your Best Deal</h2>
+                <p className="text-muted-foreground max-w-sm mx-auto text-sm leading-relaxed">
                   Set a budget above, pick a category, and let our AI rank the best marketplace listings by value — not just price.
                 </p>
 
@@ -515,10 +515,10 @@ export default function BudgetShoppingPage() {
                     { icon: "🤖", title: "AI Scans the Market", desc: "Gemini 2.5 analyses every active listing and ranks by value score." },
                     { icon: "🏆", title: "Get Ranked Deals", desc: "See Hot Deals, savings %, budget leftover, and a direct link to each ad." },
                   ].map(step => (
-                    <div key={step.title} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                    <div key={step.title} className="bg-card rounded-2xl p-6 shadow-sm border border-border">
                       <div className="text-3xl mb-3">{step.icon}</div>
-                      <h3 className="font-bold text-slate-800 mb-1">{step.title}</h3>
-                      <p className="text-slate-500 text-sm">{step.desc}</p>
+                      <h3 className="font-bold text-foreground mb-1">{step.title}</h3>
+                      <p className="text-muted-foreground text-sm">{step.desc}</p>
                     </div>
                   ))}
                 </div>
@@ -529,8 +529,8 @@ export default function BudgetShoppingPage() {
             {!loading && recommendations.length === 0 && hasSearched && !error && (
               <div className="text-center mt-20">
                 <p className="text-4xl mb-4">🔍</p>
-                <h2 className="text-xl font-bold text-slate-700 mb-2">No deals found</h2>
-                <p className="text-slate-400 text-sm">Try increasing your budget or using a broader search term.</p>
+                <h2 className="text-xl font-bold text-foreground mb-2">No deals found</h2>
+                <p className="text-muted-foreground text-sm">Try increasing your budget or using a broader search term.</p>
               </div>
             )}
           </div>
@@ -548,8 +548,8 @@ function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; va
     <div className="flex items-center gap-2">
       {icon}
       <div>
-        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{label}</p>
-        <p className="text-sm font-black text-slate-800">{value}</p>
+        <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">{label}</p>
+        <p className="text-sm font-black text-foreground">{value}</p>
       </div>
     </div>
   );
