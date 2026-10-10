@@ -43,14 +43,24 @@ export async function generateEmbedding(text: string): Promise<number[]> {
   }
 }
 
+import { GoogleGenAI } from "@google/genai";
+
+let geminiClient: GoogleGenAI | null = null;
+function getGeminiClient(): GoogleGenAI | null {
+  if (!geminiClient && process.env.GEMINI_API_KEY) {
+    geminiClient = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+  }
+  return geminiClient;
+}
+
 /**
- * Perform a vector search on the Ad collection
+ * Perform a vector search on the Ad collection with keyword fallback
  */
-export async function searchAds(queryEmbedding: number[]) {
+export async function searchAds(queryEmbedding: number[], fallbackQuery?: string) {
   try {
     await connectDB(); // Ensure DB is connected
 
-    const ads = await Ad.aggregate([
+    let ads = await Ad.aggregate([
       {
         $vectorSearch: {
           index: "default", // Make sure your Atlas Vector Search Index is named 'default' or update this to match
@@ -67,16 +77,64 @@ export async function searchAds(queryEmbedding: number[]) {
         },
       },
     ]);
+
+    // Fallback: If vector search returned 0 results and fallback text query is provided
+    if ((!ads || ads.length === 0) && fallbackQuery && fallbackQuery.trim() !== "") {
+      const words = fallbackQuery
+        .trim()
+        .split(/\s+/)
+        .filter((w) => w.length > 2)
+        .map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+
+      if (words.length > 0) {
+        ads = await Ad.find({
+          status: "active",
+          $or: words.flatMap((word) => [
+            { title: { $regex: word, $options: "i" } },
+            { description: { $regex: word, $options: "i" } },
+            { category: { $regex: word, $options: "i" } },
+          ]),
+        })
+          .limit(5)
+          .select("-embedding")
+          .lean();
+      }
+    }
+
     return ads;
   } catch (error) {
-    console.error("Error performing vector search:", error);
-    // Return empty array if error (e.g. index not created yet)
+    console.error("Error performing vector search, using keyword fallback:", error);
+    try {
+      if (fallbackQuery && fallbackQuery.trim() !== "") {
+        const words = fallbackQuery
+          .trim()
+          .split(/\s+/)
+          .filter((w) => w.length > 2)
+          .map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+
+        if (words.length > 0) {
+          return await Ad.find({
+            status: "active",
+            $or: words.flatMap((word) => [
+              { title: { $regex: word, $options: "i" } },
+              { description: { $regex: word, $options: "i" } },
+              { category: { $regex: word, $options: "i" } },
+            ]),
+          })
+            .limit(5)
+            .select("-embedding")
+            .lean();
+        }
+      }
+    } catch (fallbackErr) {
+      console.error("Keyword fallback search failed:", fallbackErr);
+    }
     return [];
   }
 }
 
 /**
- * Generate a conversational response using Mistral AI based strictly on retrieved ads
+ * Generate a conversational response using Mistral AI (with Gemini fallback) based strictly on retrieved ads
  */
 export async function generateChatResponse(query: string, ads: any[]): Promise<string> {
   const prompt = `You are an AI assistant for an OLX-like marketplace. 
@@ -86,8 +144,8 @@ Here are the most relevant listings available right now in our database:
 ${ads.length > 0
       ? ads
         .map(
-          (ads) =>
-            `- ${ads.title} (Price: ₹${ads.price}, Category/Condition: ${ads.category}, Location: ${ads.locationName})\n  Description: ${ads.description}\n  Link: /ads/${ads._id}`
+          (ad) =>
+            `- ${ad.title} (Price: ₹${ad.price}, Category/Condition: ${ad.category}, Location: ${ad.locationName})\n  Description: ${ad.description}\n  Link: /ads/${ad._id}`
         )
         .join("\n\n")
       : "No relevant listings found."
@@ -103,19 +161,36 @@ Instructions:
 - If nothing relevant is found, clearly say that and suggest they modify their search or provide the closest available listings if any.
 - Behave like an intelligent and helpful marketplace assistant.`;
 
+  // 1. Primary: Try Mistral AI
   try {
     const response = await getMistralClient().chat.complete({
       model: "mistral-small-latest",
       messages: [{ role: "user", content: prompt }],
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (
-      (response as any).choices?.[0]?.message?.content ||
-      "Sorry, I couldn't generate a response at this moment."
-    );
+    const content = (response as any).choices?.[0]?.message?.content;
+    if (content) return content;
   } catch (error) {
-    console.error("Error generating chat response:", error);
-    throw new Error("Failed to generate chat response");
+    console.warn("Mistral AI chat completion failed, falling back to Gemini:", error);
   }
+
+  // 2. Resilient Fallback: Try Gemini AI
+  try {
+    const gemini = getGeminiClient();
+    if (gemini) {
+      const response = await gemini.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: prompt,
+        config: {
+          temperature: 0.7,
+        },
+      });
+
+      if (response.text) return response.text.trim();
+    }
+  } catch (geminiError) {
+    console.error("Gemini fallback chat completion also failed:", geminiError);
+  }
+
+  return "I'm currently unable to generate a response. Please browse the listings directly on the marketplace.";
 }

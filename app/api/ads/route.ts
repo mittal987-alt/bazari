@@ -4,6 +4,8 @@ import Ad from "@/models/Ad";
 import { checkListingForFraud } from "@/lib/fraudDetection";
 import { generateEmbedding } from "@/services/ai.service";
 
+import { getUserFromToken } from "@/lib/auth";
+
 export const runtime = "nodejs";
 
 /* ===================== GET ===================== */
@@ -58,6 +60,7 @@ export async function GET(req: NextRequest) {
     let sortQuery: any = { createdAt: -1 };
     if (sort === "price_low")  sortQuery = { price: 1 };
     if (sort === "price_high") sortQuery = { price: -1 };
+    if (sort === "trending")   sortQuery = { views: -1, chats: -1, createdAt: -1 };
 
     const total = await Ad.countDocuments(filter);
     const totalPages = Math.max(1, Math.ceil(total / limit));
@@ -90,6 +93,8 @@ export async function POST(req: NextRequest) {
   try {
     await connectDB();
 
+    const authUser = await getUserFromToken();
+
     const body = await req.json();
 
     const {
@@ -106,8 +111,17 @@ export async function POST(req: NextRequest) {
       groupBuyPrice
     } = body;
 
+    const effectiveUserId = authUser?.id || userId;
+
+    if (!effectiveUserId) {
+      return NextResponse.json(
+        { message: "Unauthorized: Please log in to post an ad" },
+        { status: 401 }
+      );
+    }
+
     // 🔥 VALIDATION
-    if (!title || !price || !location || !category || !lat || !lng || !userId) {
+    if (!title || price === undefined || !location || !category || lat === undefined || lng === undefined) {
       return NextResponse.json(
         { message: "Missing required fields" },
         { status: 400 }
@@ -124,17 +138,15 @@ export async function POST(req: NextRequest) {
     });
 
     // 🧠 GENERATE EMBEDDING for semantic/vector search
-    // Built from the same fields the chatbot's search prompt uses, so
-    // search relevance stays consistent with how listings are displayed.
     const textToEmbed = `Title: ${title}. Category: ${category}. Description: ${body.description || ""}. Price: ₹${price}. Location: ${location}.`;
     const embedding = await generateEmbedding(textToEmbed);
 
     const newAd = await Ad.create({
       title,
-      price,
+      price: Number(price),
       category,
       images: images || [],
-      user: userId,
+      user: effectiveUserId,
       description: body.description || "",
       status: fraudResult.status,
       embedding,
@@ -142,7 +154,7 @@ export async function POST(req: NextRequest) {
       // ✅ GEO LOCATION
       location: {
         type: "Point",
-        coordinates: [lng, lat],
+        coordinates: [Number(lng), Number(lat)],
       },
 
       locationName: location,

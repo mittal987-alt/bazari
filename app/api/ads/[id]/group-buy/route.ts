@@ -1,27 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
+import { getUserFromToken } from "@/lib/auth";
 import Ad from "@/models/Ad";
 
 export const runtime = "nodejs";
 
-// 1. Update the type definition for context
 export async function POST(
   req: NextRequest,
-  context: { params: Promise<{ id: string }> } // Changed to Promise
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
 
-    // 2. Await the params before destructuring
+    const authUser = await getUserFromToken();
+
     const { id } = await context.params; 
 
-    const body = await req.json();
-    const { userId } = body;
+    const body = await req.json().catch(() => ({}));
+    const userId = authUser?.id || body.userId;
 
     if (!userId) {
       return NextResponse.json(
-        { message: "User ID is required" },
-        { status: 400 }
+        { message: "Unauthorized: Please log in to join the group buy" },
+        { status: 401 }
       );
     }
 

@@ -10,6 +10,7 @@ import {
   FiLogOut, FiPackage, FiArrowRight, FiEdit2,
   FiZap, FiUser, FiStar, FiTrendingUp,
 } from "react-icons/fi";
+import { useUserStore } from "@/store/userStore";
 
 type User = {
   id: string;
@@ -67,6 +68,7 @@ export default function ProfilePage() {
   }, []);
 
   const handleLogout = () => {
+    useUserStore.getState().clearUser();
     api.post("/auth/logout").then(() => { window.location.href = "/"; });
   };
 

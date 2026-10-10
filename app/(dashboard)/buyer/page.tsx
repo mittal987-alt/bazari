@@ -1,3 +1,18 @@
-export default function BuyerDashboard() {
-  return <h1 className="p-6 text-xl font-bold">Buyer dashboard</h1>;
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+
+export default function BuyerDashboardRedirect() {
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace("/dashboard/buyer");
+  }, [router]);
+
+  return (
+    <div className="flex h-screen items-center justify-center">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+    </div>
+  );
 }

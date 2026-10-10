@@ -1,4 +1,3 @@
-const fs = require('fs');
 const vision = require('@google-cloud/vision');
 require('dotenv').config({ path: '.env.local' });
 

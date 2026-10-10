@@ -57,12 +57,6 @@ export async function POST(req: Request) {
       }
     );
 
-    console.log("=================================");
-    console.log("LOGIN SUCCESS");
-    console.log("USER:", user.email);
-    console.log("TOKEN CREATED:", token.substring(0, 30));
-    console.log("=================================");
-
     const response = NextResponse.json({
       id: user._id,
       name: user.name,

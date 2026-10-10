@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Prioritize finding what they are looking for first, then let AI analyze the budget reality
-    let dbQuery: any = { status: "active" };
+    const dbQuery: any = { status: "active" };
     if (query) {
       dbQuery.$text = { $search: query };
     } else {

@@ -80,3 +80,26 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: error.message || "Internal Server Error" }, { status: 500 });
   }
 }
+
+export async function GET(req: Request) {
+  try {
+    await connectDB();
+    const { searchParams } = new URL(req.url);
+    const sellerId = searchParams.get("sellerId");
+
+    if (!sellerId) {
+      return NextResponse.json({ message: "sellerId is required" }, { status: 400 });
+    }
+
+    const reviews = await Review.find({ sellerId })
+      .populate("reviewerId", "name avatar")
+      .populate("adId", "title price")
+      .sort({ createdAt: -1 })
+      .limit(20);
+
+    return NextResponse.json(reviews);
+  } catch (error: any) {
+    console.error("Fetch Reviews Error:", error);
+    return NextResponse.json({ message: error.message || "Internal Server Error" }, { status: 500 });
+  }
+}

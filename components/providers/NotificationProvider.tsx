@@ -6,13 +6,15 @@ import { AnimatePresence, motion } from "framer-motion";
 import { FiMessageCircle, FiX } from "react-icons/fi";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useUserStore } from "@/store/userStore";
 
 export default function NotificationProvider({ children }: { children: React.ReactNode }) {
   const [notification, setNotification] = useState<any>(null);
   const pathname = usePathname();
+  const { user } = useUserStore();
+  const userId = user?.id;
 
   useEffect(() => {
-    const userId = localStorage.getItem("userId");
     if (!userId) return;
 
     // Connect to socket if not already connected
@@ -23,7 +25,7 @@ export default function NotificationProvider({ children }: { children: React.Rea
     // Register user for personal notifications
     socket.emit("register_user", userId);
 
-    socket.on("new_notification", (data) => {
+    const handleNotification = (data: any) => {
       // Don't show toast if we are already in that specific chat room
       if (pathname === `/chats/${data.chatId}`) {
         return;
@@ -35,12 +37,14 @@ export default function NotificationProvider({ children }: { children: React.Rea
       setTimeout(() => {
         setNotification(null);
       }, 5000);
-    });
+    };
+
+    socket.on("new_notification", handleNotification);
 
     return () => {
-      socket.off("new_notification");
+      socket.off("new_notification", handleNotification);
     };
-  }, [pathname]);
+  }, [pathname, userId]);
 
   return (
     <>

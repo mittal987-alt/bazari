@@ -188,7 +188,10 @@ export default function UnifiedChatLayout({ activeChatId }: UnifiedChatLayoutPro
 
     // Active Room Listeners
     socket.on("receive_message", (msg: Message) => {
-      setMessages((prev) => [...prev, { ...msg, status: "sent" }]);
+      setMessages((prev) => {
+        if (prev.some((m) => m._id === msg._id)) return prev;
+        return [...prev, { ...msg, status: "sent" }];
+      });
       setIsOtherTyping(false);
       // Also update last message in sidebar
       setChats((prev) => {
@@ -290,7 +293,7 @@ export default function UnifiedChatLayout({ activeChatId }: UnifiedChatLayoutPro
     } : c));
 
     try {
-      const otherUser = chatMeta.buyer._id === userId ? chatMeta.seller : chatMeta.buyer;
+      const otherUser = chatMeta?.buyer?._id === userId ? chatMeta?.seller : chatMeta?.buyer;
       const res = await api.post(`/chats/${activeChatId}`, { text: messageText });
       const saved = { ...res.data, status: "sent" };
 

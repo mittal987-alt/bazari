@@ -11,12 +11,6 @@ export async function GET() {
     const cookieStore = await cookies();
     const token = cookieStore.get("token")?.value;
 
-    console.log("=================================");
-    console.log("TOKEN EXISTS:", !!token);
-    console.log("TOKEN:", token?.substring(0, 30));
-    console.log("JWT_SECRET EXISTS:", !!process.env.JWT_SECRET);
-    console.log("=================================");
-
     if (!token) {
       return NextResponse.json(
         { message: "Not authenticated" },

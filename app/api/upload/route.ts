@@ -22,6 +22,14 @@ export async function POST(req: Request) {
     const uploadedUrls: string[] = [];
 
     for (const file of files) {
+      // Validate image MIME type
+      if (!file.type || !file.type.startsWith("image/")) {
+        return NextResponse.json(
+          { message: `File ${file.name} is not an image. Only image files are permitted.` },
+          { status: 400 }
+        );
+      }
+
       // limit 5MB
       if (file.size > 5 * 1024 * 1024) {
         return NextResponse.json(
@@ -37,7 +45,7 @@ export async function POST(req: Request) {
         const uploadStream = cloudinary.uploader.upload_stream(
           {
             folder: "olx_ads",
-            resource_type: "auto",
+            resource_type: "image",
           },
           (error, response) => {
             if (error) reject(error);
