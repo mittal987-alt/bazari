@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 interface Product {
   _id: string;
@@ -17,6 +18,7 @@ interface Product {
   images: string[];
   description?: string;
   listingUrl?: string;
+  sellerId?: string;
   status?: string;
   score?: number;
   reasons?: string[];
@@ -217,6 +219,7 @@ function SellerInfoCard({ seller }: { seller: SellerInfo }) {
 }
 
 export default function MarketplaceChatbot() {
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([{
     id: "init", role: "ai",
@@ -227,13 +230,32 @@ export default function MarketplaceChatbot() {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  const activeListingMatch = pathname?.match(/\/ads\/([a-f\d]{24})/i);
+  const activeListingId = activeListingMatch ? activeListingMatch[1] : undefined;
+
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
   const buildHistory = useCallback(() => {
-    return messages.filter((m) => m.id !== "init").slice(-20).map((m) => ({
-      role: m.role === "user" ? ("user" as const) : ("model" as const),
-      content: m.content,
-    }));
+    return messages
+      .filter((m) => m.id !== "init")
+      .slice(-20)
+      .map((m) => {
+        let content = m.content;
+        if (m.role === "ai" && m.products && m.products.length > 0) {
+          const productList = m.products
+            .slice(0, 5)
+            .map(
+              (p, idx) =>
+                `[Result #${idx + 1}] ID: ${p._id} | Title: "${p.title}" | Price: ₹${p.price} | Category: ${p.category} | SellerID: ${p.sellerId}`
+            )
+            .join("\n");
+          content = `${content}\n\nListings shown to user:\n${productList}`;
+        }
+        return {
+          role: m.role === "user" ? ("user" as const) : ("model" as const),
+          content,
+        };
+      });
   }, [messages]);
 
   const sendMessage = useCallback(async (messageText: string) => {
@@ -242,11 +264,38 @@ export default function MarketplaceChatbot() {
     setInput("");
     setMessages((prev) => [...prev, { id: Date.now().toString(), role: "user", content: userMessage }]);
     setIsLoading(true);
+
+    // Resolve any contextual listing ID from recently displayed products if user refers to them
+    let contextualListingId = activeListingId;
+    if (!contextualListingId) {
+      const recentTurnWithProducts = [...messages].reverse().find(
+        (m) => m.products && m.products.length > 0
+      );
+      if (recentTurnWithProducts?.products && recentTurnWithProducts.products.length > 0) {
+        const prods = recentTurnWithProducts.products;
+        const lowerMsg = userMessage.toLowerCase();
+        if (/\b(?:second|2nd)\b/i.test(lowerMsg) && prods.length >= 2) {
+          contextualListingId = prods[1]._id;
+        } else if (/\b(?:third|3rd)\b/i.test(lowerMsg) && prods.length >= 3) {
+          contextualListingId = prods[2]._id;
+        } else if (
+          /\b(?:first|1st|this|the item|the product|the seller|seller of|price fair)\b/i.test(lowerMsg) ||
+          prods.length === 1
+        ) {
+          contextualListingId = prods[0]._id;
+        }
+      }
+    }
+
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userMessage, history: buildHistory() }),
+        body: JSON.stringify({
+          message: userMessage,
+          history: buildHistory(),
+          activeListingId: contextualListingId,
+        }),
       });
       const data = await response.json();
       if (response.ok) {
@@ -259,12 +308,19 @@ export default function MarketplaceChatbot() {
       } else {
         throw new Error(data.error || "Failed to fetch response");
       }
-    } catch {
-      setMessages((prev) => [...prev, { id: (Date.now() + 1).toString(), role: "ai", content: "Sorry, I encountered an error. Please try again.", isError: true }]);
+    } catch (err: unknown) {
+      const errMsg =
+        err instanceof Error
+          ? err.message
+          : "Sorry, I encountered an error. Please try again.";
+      setMessages((prev) => [
+        ...prev,
+        { id: (Date.now() + 1).toString(), role: "ai", content: errMsg, isError: true },
+      ]);
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, buildHistory]);
+  }, [isLoading, buildHistory, activeListingId, messages]);
 
   const handleSubmit = async (e: React.FormEvent) => { e.preventDefault(); await sendMessage(input); };
 
@@ -287,7 +343,7 @@ export default function MarketplaceChatbot() {
           <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-4 text-white flex justify-between items-center flex-shrink-0">
             <div>
               <h3 className="font-semibold text-lg flex items-center gap-2"><MessageCircle size={20} /> Bazari AI</h3>
-              <p className="text-xs text-blue-100 opacity-80">Powered by Gemini - Agentic Marketplace Assistant</p>
+              <p className="text-xs text-blue-100 opacity-80">AI-Powered Agentic Marketplace Assistant</p>
             </div>
             <button onClick={() => setIsOpen(false)} className="text-white hover:text-gray-200 transition-colors" aria-label="Close chat">
               <X size={24} />

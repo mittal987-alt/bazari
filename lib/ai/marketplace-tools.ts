@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Bazari Marketplace Tool Implementations
  *
  * Server-side, read-only tool functions that execute the actual database queries.
@@ -32,6 +32,11 @@ export interface NormalizedListing {
   views: number;
   isGroupBuy?: boolean;
   groupBuyPrice?: number;
+  score?: number;
+  reasons?: string[];
+  tradeOffs?: string[];
+  savings?: number;
+  referenceListingId?: string;
 }
 
 export interface SellerInfo {
@@ -92,6 +97,11 @@ function normalizeListing(ad: any): NormalizedListing {
     views: Number(ad.views) || 0,
     isGroupBuy: Boolean(ad.isGroupBuy),
     groupBuyPrice: ad.isGroupBuy ? Number(ad.groupBuyPrice) : undefined,
+    score: typeof ad.score === "number" ? ad.score : undefined,
+    reasons: Array.isArray(ad.reasons) ? ad.reasons : undefined,
+    tradeOffs: Array.isArray(ad.tradeOffs) ? ad.tradeOffs : undefined,
+    savings: typeof ad.savings === "number" ? ad.savings : undefined,
+    referenceListingId: typeof ad.referenceListingId === "string" ? ad.referenceListingId : undefined,
   };
 }
 
