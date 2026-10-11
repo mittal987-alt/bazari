@@ -305,10 +305,10 @@ async function runAllTests() {
   -------------------------------------------------------- */
   console.log("\nSuite 5: Marketplace Tools & Read-Only Schema");
 
-  await it("provides 6 identical tools for both Mistral and Gemini", () => {
-    assert.strictEqual(VALID_TOOL_NAMES.size, 6);
-    assert.strictEqual(MISTRAL_MARKETPLACE_TOOLS.length, 6);
-    assert.strictEqual(GEMINI_MARKETPLACE_TOOLS[0].functionDeclarations?.length, 6);
+  await it("provides 8 identical tools for both Mistral and Gemini", () => {
+    assert.strictEqual(VALID_TOOL_NAMES.size, 8);
+    assert.strictEqual(MISTRAL_MARKETPLACE_TOOLS.length, 8);
+    assert.strictEqual(GEMINI_MARKETPLACE_TOOLS[0].functionDeclarations?.length, 8);
 
     const mistralNames = MISTRAL_MARKETPLACE_TOOLS.map((t) => t.function.name).sort();
     const geminiNames = GEMINI_MARKETPLACE_TOOLS[0].functionDeclarations!.map((t) => t.name).sort();
@@ -692,9 +692,14 @@ async function runAllTests() {
   console.log(` RESULTS: ${passedCount} PASSED, ${failedCount} FAILED`);
   console.log("========================================================\n");
 
-  if (failedCount > 0) {
-    process.exit(1);
+  try {
+    const mongoose = await import("mongoose");
+    await mongoose.default.disconnect();
+  } catch {
+    // Ignore cleanup error
   }
+
+  process.exitCode = failedCount > 0 ? 1 : 0;
 }
 
 runAllTests().catch((err) => {

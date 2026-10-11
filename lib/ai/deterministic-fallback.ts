@@ -24,6 +24,8 @@ import {
   toolGetSellerInformation,
   toolEstimatePriceFairness,
   toolGetRecommendations,
+  toolFindBudgetAlternatives,
+  toolFindSimilarListings,
   type NormalizedListing,
   type ComparisonResult,
   type SellerInfo,
@@ -139,12 +141,30 @@ function extractCity(text: string): string | undefined {
 function extractCategory(text: string): string | undefined {
   const lower = text.toLowerCase();
   if (/\b(?:laptop|laptops|computer|computers|macbook|pc)\b/.test(lower)) return "Electronics";
-  if (/\b(?:phone|phones|mobile|mobiles|iphone|android|smartphone)\b/.test(lower)) return "Mobiles";
+  if (/\b(?:phone|phones|mobile|mobiles|iphone|android|smartphone)\b/.test(lower)) return "Electronics";
   if (/\b(?:bike|bikes|motorcycle|scooter|car|cars|vehicle|vehicles)\b/.test(lower)) return "Vehicles";
   if (/\b(?:furniture|sofa|table|chair|bed|desk)\b/.test(lower)) return "Furniture";
   if (/\b(?:fashion|clothes|shoes|clothing|jacket|shirt)\b/.test(lower)) return "Fashion";
   if (/\b(?:book|books|novel|textbook)\b/.test(lower)) return "Books";
   return undefined;
+}
+
+/**
+ * Extracts recognized brand preferences from user input
+ */
+function extractBrand(text: string): string | undefined {
+  const brandMatch = text.match(
+    /\b(apple|iphone|macbook|dell|hp|lenovo|asus|acer|samsung|sony|oneplus|xiaomi|realme|fossil|nike|adidas|royal enfield|honda|toyota)\b/i
+  );
+  return brandMatch ? brandMatch[1] : undefined;
+}
+
+/**
+ * Extracts condition preferences from user input
+ */
+function extractCondition(text: string): string | undefined {
+  const condMatch = text.match(/\b(new|used|like new|refurbished|second hand|mint)\b/i);
+  return condMatch ? condMatch[1] : undefined;
 }
 
 /**
@@ -168,7 +188,9 @@ export async function executeDeterministicFallback(
   const lower = text.toLowerCase();
 
   // 1. Off-topic conversational queries (not marketplace related)
+  const hasProductContext = /\b(?:laptop|laptops|phone|phones|macbook|car|bike|furniture|product|listing|price|buy|search|find|show|under|below|rs|₹|cheap|deal|gaming)\b/i.test(lower);
   const isOffTopic =
+    !hasProductContext &&
     /\b(?:joke|jokes|funny|poem|story|riddle|weather|capital of|who wrote|who is the|president|prime minister|translate|write code|coding|script)\b/i.test(
       lower
     );
@@ -421,20 +443,68 @@ export async function executeDeterministicFallback(
   }
 
   /* -------------------------------------------------------------
+     ACTION D.2: Budget Alternatives (Cheaper Listings)
+  ------------------------------------------------------------- */
+  const isCheaperQuery = /\b(?:cheaper|cheapest|lower price|less expensive|budget alternatives?|cheaper alternatives?|cheaper ones|alternatives that are cheaper)\b/i.test(
+    lower
+  );
+  if (isCheaperQuery && effectiveId) {
+    const altResult = await toolFindBudgetAlternatives({ referenceListingId: effectiveId });
+    if (!("error" in altResult)) {
+      const alts = altResult as RankedRecommendation[];
+      if (alts.length > 0) {
+        return {
+          handled: true,
+          status: 200,
+          response: {
+            answer: `AI completion services are temporarily in database fallback mode. Here are ${alts.length} verified listings priced lower than the referenced item, directly from our marketplace database:`,
+            products: alts.map((r) => ({
+              ...r.listing,
+              score: r.score,
+              reasons: r.reasons,
+              tradeOffs: r.tradeOffs,
+            })),
+            suggestions: [
+              alts.length >= 2 ? "Compare the first two listings for me" : "Is the price fair?",
+              "Tell me about the seller of the first result",
+            ],
+            provider: "database_fallback",
+          },
+        };
+      } else {
+        return {
+          handled: true,
+          status: 200,
+          response: {
+            answer: `I searched our marketplace database, but found no active listings in this category priced lower than this item. This listing is currently the most competitively priced option available.`,
+            suggestions: ["Show all recommendations in this category", "Check price fairness"],
+            provider: "database_fallback",
+          },
+        };
+      }
+    }
+  }
+
+  /* -------------------------------------------------------------
      ACTION E: Recommendations
   ------------------------------------------------------------- */
-  const isRecQuery = /\b(?:recommend|recommendation|recommendations|suggest|suggestions|best options|top deals)\b/i.test(
+  const isRecQuery = /\b(?:recommend|recommendation|recommendations|suggest|suggestions|best options|top deals|best value|deals)\b/i.test(
     lower
   );
   if (isRecQuery) {
-    const { maxPrice } = extractPriceBounds(text);
+    const { minPrice, maxPrice } = extractPriceBounds(text);
     const category = extractCategory(text);
+    const brand = extractBrand(text);
+    const condition = extractCondition(text);
     const city = extractCity(text);
-    const cleanQuery = extractCleanQuery(text) || category || "deals";
+    const cleanQuery = extractCleanQuery(text) || brand || category || "deals";
 
     const recResult = await toolGetRecommendations({
       query: cleanQuery,
+      minPrice,
       maxPrice,
+      brand,
+      condition,
       category,
       city,
     });
@@ -447,7 +517,12 @@ export async function executeDeterministicFallback(
           status: 200,
           response: {
             answer: `AI completion is temporarily operating in database fallback mode. Here are ${recs.length} recommended listings ranked by budget and ratings from our verified database:`,
-            products: recs.map((r) => ({ ...r.listing, score: r.score, reasons: r.reasons })),
+            products: recs.map((r) => ({
+              ...r.listing,
+              score: r.score,
+              reasons: r.reasons,
+              tradeOffs: r.tradeOffs,
+            })),
             suggestions: [
               recs.length >= 2 ? "Compare the first two listings for me" : "Check price fairness",
               "Search with a different budget",
@@ -460,16 +535,20 @@ export async function executeDeterministicFallback(
   }
 
   /* -------------------------------------------------------------
-     ACTION F: Search Active Listings (Keyword, Price, City, Category)
+     ACTION F: Search Active Listings (Keyword, Price, City, Category, Brand)
   ------------------------------------------------------------- */
   const priceBounds = extractPriceBounds(text);
   const detectedCategory = extractCategory(text);
+  const detectedBrand = extractBrand(text);
+  const detectedCondition = extractCondition(text);
   const detectedCity = extractCity(text);
   const cleanQuery = extractCleanQuery(text);
 
-  // If user has search intent, explicit category, price bounds, city, or product terms
+  // If user has search intent, explicit category, brand, condition, price bounds, city, or product terms
   const hasSearchIntent =
     detectedCategory !== undefined ||
+    detectedBrand !== undefined ||
+    detectedCondition !== undefined ||
     priceBounds.minPrice !== undefined ||
     priceBounds.maxPrice !== undefined ||
     detectedCity !== undefined ||
@@ -485,6 +564,8 @@ export async function executeDeterministicFallback(
     const searchResult = await toolSearchProducts({
       query: cleanQuery.length > 0 ? cleanQuery : undefined,
       category: detectedCategory,
+      brand: detectedBrand,
+      condition: detectedCondition,
       minPrice: priceBounds.minPrice,
       maxPrice: priceBounds.maxPrice,
       city: detectedCity,

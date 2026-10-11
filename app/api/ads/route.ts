@@ -3,8 +3,15 @@ import { connectDB } from "@/lib/db";
 import Ad from "@/models/Ad";
 import { checkListingForFraud } from "@/lib/fraudDetection";
 import { generateEmbedding } from "@/services/ai.service";
-
 import { getUserFromToken } from "@/lib/auth";
+import {
+  escapeRegex,
+  extractSearchTokens,
+  parsePrice,
+} from "@/lib/search/search-normalization";
+import { interpretSearchQuery } from "@/lib/search/search-interpreter";
+import { rankListings } from "@/lib/search/search-ranking";
+import { matchNewListingToSavedSearches } from "@/lib/notifications/notification-service";
 
 export const runtime = "nodejs";
 
@@ -15,71 +22,169 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
 
-    const search   = searchParams.get("search")   || "";
-    const category = searchParams.get("category") || "";
-    const city     = searchParams.get("city")     || "";
-    const min      = searchParams.get("min")       || "";
-    const max      = searchParams.get("max")       || "";
-    const sort     = searchParams.get("sort")      || "";
-    const page     = Math.max(1, parseInt(searchParams.get("page") || "1"));
-    const limit    = 12;
+    const rawSearch = searchParams.get("search") || searchParams.get("q") || "";
+    let category   = searchParams.get("category") || "";
+    let city       = searchParams.get("city")     || "";
+    let minStr     = searchParams.get("min")      || "";
+    let maxStr     = searchParams.get("max")      || "";
+    let sort       = searchParams.get("sort")     || "relevance";
+    let condition  = searchParams.get("condition") || "";
+    let brand      = searchParams.get("brand")     || "";
+    const useAI    = searchParams.get("ai") === "true";
+    const page     = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+    const requestedLimit = parseInt(searchParams.get("limit") || "12", 10);
+    const limit    = Math.min(Math.max(1, isNaN(requestedLimit) ? 12 : requestedLimit), 50);
 
-    const filter: any = {};
+    let interpretation: any = undefined;
 
-    // Keyword search across title, description, category
-    if (search.trim() !== "") {
-      const words = search.trim().split(/\s+/).map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
-      filter.$or = words.flatMap(word => [
-        { title: { $regex: word, $options: "i" } },
-        { description: { $regex: word, $options: "i" } },
-        { category: { $regex: word, $options: "i" } },
-        { locationName: { $regex: word, $options: "i" } },
-      ]);
+    // Optional AI query interpretation if requested or if search query appears complex
+    if (rawSearch.trim() && (useAI || /\b(under|below|between|near me|for|with)\b/i.test(rawSearch))) {
+      try {
+        interpretation = await interpretSearchQuery(rawSearch.trim(), {
+          userCity: city || undefined,
+        });
+
+        // Merge AI interpreted parameters if not explicitly provided
+        if (!category && interpretation.category) category = interpretation.category;
+        if (!city && interpretation.city) city = interpretation.city;
+        if (!minStr && interpretation.minPrice !== undefined) minStr = String(interpretation.minPrice);
+        if (!maxStr && interpretation.maxPrice !== undefined) maxStr = String(interpretation.maxPrice);
+        if (!condition && interpretation.condition) condition = interpretation.condition;
+        if (!brand && interpretation.brand) brand = interpretation.brand;
+        if (sort === "relevance" && interpretation.sortBy) sort = interpretation.sortBy;
+      } catch (interpretErr) {
+        console.warn("[api:ads] Query interpretation skipped:", interpretErr);
+      }
     }
 
-    if (category && category !== "all") {
-      filter.category = category;
+    // Strictly limit public discovery to active listings
+    const filter: any = {
+      status: "active",
+    };
+
+    const andConditions: any[] = [];
+
+    // Keyword search with safe token expansion and typo tolerance
+    const trimmedSearch = rawSearch.trim();
+    if (trimmedSearch !== "") {
+      const { expandedTerms } = extractSearchTokens(trimmedSearch, 5);
+
+      if (expandedTerms.length > 0) {
+        // Build bounded regex clauses for expanded terms
+        const searchRegexes = expandedTerms.map((term) => new RegExp(escapeRegex(term), "i"));
+        
+        // Match across title, description, category, or location
+        andConditions.push({
+          $or: [
+            { title: { $in: searchRegexes } },
+            { description: { $in: searchRegexes } },
+            { category: { $in: searchRegexes } },
+            { locationName: { $in: searchRegexes } },
+          ],
+        });
+      }
+    }
+
+    // Category filter
+    if (category && category.toLowerCase() !== "all") {
+      filter.category = {
+        $regex: `^${escapeRegex(category.trim())}$`,
+        $options: "i",
+      };
+    }
+
+    // Brand filter
+    if (brand.trim()) {
+      const brandRegex = new RegExp(escapeRegex(brand.trim()), "i");
+      andConditions.push({
+        $or: [
+          { title: brandRegex },
+          { description: brandRegex },
+        ],
+      });
+    }
+
+    // Condition filter
+    if (condition.trim()) {
+      const condRegex = new RegExp(escapeRegex(condition.trim()), "i");
+      andConditions.push({
+        $or: [
+          { title: condRegex },
+          { description: condRegex },
+        ],
+      });
     }
 
     // City / location filter
-    if (city.trim() !== "") {
-      filter.locationName = { $regex: city.trim(), $options: "i" };
+    if (city.trim()) {
+      filter.locationName = { $regex: escapeRegex(city.trim()), $options: "i" };
     }
 
     // Price range filter
-    if (min !== "" || max !== "") {
+    const parsedMin = parsePrice(minStr);
+    const parsedMax = parsePrice(maxStr);
+
+    if (parsedMin !== undefined || parsedMax !== undefined) {
       filter.price = {};
-      if (min !== "") filter.price.$gte = Number(min);
-      if (max !== "") filter.price.$lte = Number(max);
+      if (parsedMin !== undefined) filter.price.$gte = parsedMin;
+      if (parsedMax !== undefined) filter.price.$lte = parsedMax;
     }
 
-    // Show active AND pending ads publicly (pending just haven't been reviewed yet)
-    filter.status = { $in: ["active", "pending"] };
+    if (andConditions.length > 0) {
+      filter.$and = andConditions;
+    }
 
-    // Sort
+    // Sorting strategy
     let sortQuery: any = { createdAt: -1 };
-    if (sort === "price_low")  sortQuery = { price: 1 };
-    if (sort === "price_high") sortQuery = { price: -1 };
+    if (sort === "price_low")  sortQuery = { price: 1, createdAt: -1 };
+    if (sort === "price_high") sortQuery = { price: -1, createdAt: -1 };
+    if (sort === "newest")     sortQuery = { createdAt: -1 };
     if (sort === "trending")   sortQuery = { views: -1, chats: -1, createdAt: -1 };
 
     const total = await Ad.countDocuments(filter);
     const totalPages = Math.max(1, Math.ceil(total / limit));
 
-    const ads = await Ad.find(filter)
-      .populate("user", "name email")
+    // Fetch documents with safe projection (excluding heavy embeddings and internal fields)
+    const rawAds = await Ad.find(filter)
+      .select("-embedding -savedBy -groupBuyers")
+      .populate("user", "name email isSellerVerified rating reviewCount")
       .sort(sortQuery)
       .skip((page - 1) * limit)
-      .limit(limit);
+      .limit(limit)
+      .lean();
+
+    // Apply ranking and relevance scoring
+    const ads = rankListings(rawAds, {
+      query: trimmedSearch,
+      category,
+      brand,
+      condition,
+      minPrice: parsedMin,
+      maxPrice: parsedMax,
+      city,
+      sortBy: sort as any,
+    });
 
     return NextResponse.json({
       ads,
       total,
       page,
       totalPages,
+      interpretation,
+      appliedFilters: {
+        search: trimmedSearch,
+        category: category || undefined,
+        city: city || undefined,
+        min: parsedMin,
+        max: parsedMax,
+        condition: condition || undefined,
+        brand: brand || undefined,
+        sort,
+      },
     });
 
   } catch (err) {
-    console.error("ADS ERROR:", err);
+    console.error("ADS SEARCH ERROR:", err);
     return NextResponse.json(
       { message: "Failed to fetch ads" },
       { status: 500 }
@@ -165,6 +270,13 @@ export async function POST(req: NextRequest) {
       groupBuyPrice: groupBuyPrice || 0,
       groupBuyers: [],
     });
+
+    // 🔔 SMART ALERTS: Trigger saved-search matching asynchronously if active
+    if (newAd.status === "active") {
+      matchNewListingToSavedSearches(newAd).catch((alertErr) => {
+        console.warn("[POST ads] Saved search alert matching skipped:", alertErr);
+      });
+    }
 
     return NextResponse.json(
       { message: "Ad created successfully", ad: newAd },

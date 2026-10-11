@@ -1,44 +1,53 @@
 import { NextRequest, NextResponse } from "next/server";
-import { GoogleGenAI } from "@google/genai";
+import { generateSellerDescription } from "@/lib/ai/seller-assistant";
+import { sanitizeInputString } from "@/lib/ai/seller-security";
+
+export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
   try {
-    const { title, category } = await req.json();
+    let body: any;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json({ message: "Invalid JSON body" }, { status: 400 });
+    }
+
+    const title = sanitizeInputString(body.title, 150);
+    const category = sanitizeInputString(body.category, 60);
 
     if (!title) {
       return NextResponse.json({ message: "Product title is required" }, { status: 400 });
     }
 
-    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_CLOUD_VISION_API_KEY;
-
-    if (!apiKey) {
-      return NextResponse.json({ message: "AI API Key is missing. Please check .env.local" }, { status: 500 });
-    }
-
-    console.log("[generate-description] Using API key prefix:", apiKey.slice(0, 8));
-
-    const ai = new GoogleGenAI({ apiKey });
-    const systemInstruction = "You are an expert product description writer for an e-commerce marketplace like OLX. Write a compelling, concise, and professional product description (100-150 words) based on the title and category provided. Highlight key features, condition expectations, and why it's a great buy. Do not use placeholders.";
-    const userMessage = `Product Title: ${title}\nCategory: ${category || "General"}`;
-
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: userMessage,
-      config: {
-        systemInstruction,
-        temperature: 0.7,
-      }
+    const result = await generateSellerDescription({
+      title,
+      category: category || "General",
+      brand: sanitizeInputString(body.brand, 80),
+      model: sanitizeInputString(body.model, 80),
+      condition: sanitizeInputString(body.condition, 80),
+      yearsUsed: body.yearsUsed !== undefined ? sanitizeInputString(String(body.yearsUsed), 20) : undefined,
+      defects: sanitizeInputString(body.defects, 300),
+      accessories: sanitizeInputString(body.accessories, 300),
+      specs: body.specs,
+      askingPrice: typeof body.askingPrice === "number" ? body.askingPrice : undefined,
     });
-
-    const description = response.text ? response.text.trim() : "";
 
     return NextResponse.json({
       success: true,
-      description,
+      description: result.description,
+      titleSuggestion: result.titleSuggestion,
+      highlights: result.highlights,
+      structuredSpecs: result.structuredSpecs,
+      unspecifiedFields: result.unspecifiedFields,
+      questionsForSeller: result.questionsForSeller,
+      provider: result.provider,
     });
-
   } catch (error: any) {
     console.error("Description Generation Error:", error);
-    return NextResponse.json({ message: error.message || "Failed to generate description" }, { status: 500 });
+    return NextResponse.json(
+      { message: error.message || "Failed to generate description" },
+      { status: 500 }
+    );
   }
 }

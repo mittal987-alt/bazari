@@ -12,6 +12,7 @@ import {
   FiHeart, FiStar, FiSearch, FiZap, FiNavigation, FiArrowRight,
   FiMessageCircle, FiCamera, FiLoader, FiTrendingUp, FiShoppingBag,
   FiMapPin, FiClock, FiChevronRight, FiUser, FiX,
+  FiBell, FiPause, FiPlay, FiTrash2, FiSliders
 } from "react-icons/fi";
 import { TbCurrencyRupee } from "react-icons/tb";
 
@@ -56,6 +57,10 @@ export default function BuyerDashboard() {
   const [comment, setComment]               = useState("");
   const [submittingReview, setSubmittingReview] = useState(false);
 
+  // Saved Searches & Alerts
+  const [savedSearches, setSavedSearches] = useState<any[]>([]);
+  const [loadingSearches, setLoadingSearches] = useState(false);
+
   /* ── image search ── */
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -84,7 +89,14 @@ export default function BuyerDashboard() {
         
         const revs = await api.get("/reviews/pending");
         setPendingReviews(revs.data);
+
+        setLoadingSearches(true);
+        const ss = await api.get("/saved-searches");
+        setSavedSearches(ss.data.savedSearches || []);
       } catch {}
+      finally {
+        setLoadingSearches(false);
+      }
     };
     load();
 
@@ -125,6 +137,25 @@ export default function BuyerDashboard() {
       alert(err.response?.data?.message || "Failed to submit review");
     } finally {
       setSubmittingReview(false);
+    }
+  };
+
+  const toggleSavedSearch = async (id: string, currentActive: boolean) => {
+    try {
+      await api.put(`/saved-searches/${id}`, { isActive: !currentActive });
+      setSavedSearches(prev => prev.map(s => s._id === id ? { ...s, isActive: !currentActive } : s));
+    } catch {
+      alert("Failed to toggle alert status");
+    }
+  };
+
+  const deleteSavedSearch = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this saved search alert?")) return;
+    try {
+      await api.delete(`/saved-searches/${id}`);
+      setSavedSearches(prev => prev.filter(s => s._id !== id));
+    } catch {
+      alert("Failed to delete saved search");
     }
   };
 
@@ -445,6 +476,131 @@ export default function BuyerDashboard() {
               <AdGrid search={search} type="nearby" limit={4} layout="horizontal" hoverEffect="lift" compact />
             </LuxeSection>
           </div>
+
+          {/* ── SAVED SEARCHES & SMART ALERTS ────────────────── */}
+          <LuxeSection
+            title="Saved Searches & Smart Alerts"
+            subtitle="Get notified instantly when matching listings appear or prices drop"
+            href="/ads"
+            icon={<FiBell size={15} />}
+            accentColor="hsl(var(--primary))"
+            bgGradient="from-primary/10 via-card/40 to-card/10"
+          >
+            {savedSearches.length === 0 ? (
+              <div className="bg-muted/40 border border-border/60 rounded-2xl p-6 text-center">
+                <FiBell className="mx-auto text-muted-foreground/30 mb-2" size={28} />
+                <h4 className="text-xs font-black uppercase tracking-wider text-foreground mb-1">
+                  No Saved Search Alerts Yet
+                </h4>
+                <p className="text-[11px] text-muted-foreground max-w-md mx-auto mb-4">
+                  Browse marketplace listings with your favorite filters, then click &quot;Save Search Alert&quot; to receive real-time notifications when new matches appear.
+                </p>
+                <Link
+                  href="/ads"
+                  className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider shadow-md hover:bg-primary/90 transition-all"
+                >
+                  <FiSearch size={12} /> Explore Listings & Create Alert
+                </Link>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                {savedSearches.map((s) => {
+                  const c = s.criteria || {};
+                  const sp = new URLSearchParams();
+                  if (c.query) sp.set("search", c.query);
+                  if (c.category) sp.set("category", c.category);
+                  if (c.city) sp.set("city", c.city);
+                  if (c.minPrice) sp.set("min", String(c.minPrice));
+                  if (c.maxPrice) sp.set("max", String(c.maxPrice));
+                  if (c.condition) sp.set("condition", c.condition);
+                  const searchUrl = `/ads?${sp.toString()}`;
+
+                  return (
+                    <div
+                      key={s._id}
+                      className="bg-card border border-border/70 rounded-2xl p-4 flex flex-col justify-between hover:border-primary/40 transition-all shadow-sm"
+                    >
+                      <div>
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <h4 className="font-bold text-xs text-foreground truncate" title={s.name}>
+                            {s.name}
+                          </h4>
+                          <span
+                            className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full shrink-0 ${
+                              s.isActive
+                                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+                                : "bg-muted text-muted-foreground border border-border"
+                            }`}
+                          >
+                            {s.isActive ? "Active" : "Paused"}
+                          </span>
+                        </div>
+
+                        {/* Criteria pills */}
+                        <div className="flex flex-wrap gap-1 mb-3">
+                          {c.query && (
+                            <span className="text-[9px] bg-muted px-2 py-0.5 rounded-md font-medium text-foreground/80">
+                              &quot;{c.query}&quot;
+                            </span>
+                          )}
+                          {c.category && (
+                            <span className="text-[9px] bg-muted px-2 py-0.5 rounded-md font-medium text-foreground/80">
+                              {c.category}
+                            </span>
+                          )}
+                          {c.maxPrice && (
+                            <span className="text-[9px] bg-muted px-2 py-0.5 rounded-md font-medium text-foreground/80">
+                              ≤ ₹{Number(c.maxPrice).toLocaleString("en-IN")}
+                            </span>
+                          )}
+                          {c.city && (
+                            <span className="text-[9px] bg-muted px-2 py-0.5 rounded-md font-medium text-foreground/80">
+                              📍 {c.city}
+                            </span>
+                          )}
+                          {c.condition && (
+                            <span className="text-[9px] bg-muted px-2 py-0.5 rounded-md font-medium capitalize text-foreground/80">
+                              {c.condition}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Card Actions */}
+                      <div className="flex items-center justify-between pt-2.5 border-t border-border/50 text-[10px]">
+                        <span className="text-muted-foreground font-medium">
+                          {s.matchCount || 0} match{s.matchCount === 1 ? "" : "es"}
+                        </span>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => toggleSavedSearch(s._id, s.isActive)}
+                            className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                            title={s.isActive ? "Pause Alerts" : "Resume Alerts"}
+                          >
+                            {s.isActive ? <FiPause size={13} /> : <FiPlay size={13} />}
+                          </button>
+                          <button
+                            onClick={() => deleteSavedSearch(s._id)}
+                            className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-muted rounded-lg transition-colors"
+                            title="Delete Saved Search"
+                          >
+                            <FiTrash2 size={13} />
+                          </button>
+                          <Link
+                            href={searchUrl}
+                            className="bg-primary/10 hover:bg-primary/20 text-primary font-bold px-2.5 py-1 rounded-lg transition-colors"
+                          >
+                            Browse
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </LuxeSection>
 
           {/* ── TRENDING ───────────────────────────────────────── */}
           <LuxeSection

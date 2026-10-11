@@ -14,7 +14,7 @@ const searchProductsDeclaration: FunctionDeclaration = {
   name: "search_products",
   description:
     "Search real Bazari marketplace listings. Use when the user asks to find, browse, or shop for products. " +
-    "Supports keyword search, category filter, price range, condition, and city.",
+    "Supports keyword search, category filter, brand, price range, condition, city, and sorting.",
   parameters: {
     type: Type.OBJECT,
     properties: {
@@ -25,6 +25,10 @@ const searchProductsDeclaration: FunctionDeclaration = {
       category: {
         type: Type.STRING,
         description: "Product category, e.g. 'Electronics', 'Bikes', 'Furniture'",
+      },
+      brand: {
+        type: Type.STRING,
+        description: "Brand preference, e.g. 'Apple', 'Dell', 'Samsung', 'Sony'",
       },
       minPrice: {
         type: Type.NUMBER,
@@ -41,6 +45,10 @@ const searchProductsDeclaration: FunctionDeclaration = {
       city: {
         type: Type.STRING,
         description: "City name to filter results",
+      },
+      sortBy: {
+        type: Type.STRING,
+        description: "Sort criteria: 'relevance', 'price_asc', 'price_desc', 'newest'",
       },
       limit: {
         type: Type.INTEGER,
@@ -128,8 +136,8 @@ const estimatePriceFairnessDeclaration: FunctionDeclaration = {
 const getRecommendationsDeclaration: FunctionDeclaration = {
   name: "get_recommendations",
   description:
-    "Return a ranked list of listings matching the user requirements. " +
-    "Use when user asks 'what do you recommend?' or 'what is the best deal?'.",
+    "Return a ranked list of listings matching user requirements using transparent multi-factor scoring. " +
+    "Use when user asks 'what do you recommend?', 'best laptop for coding', or 'find alternatives'.",
   parameters: {
     type: Type.OBJECT,
     properties: {
@@ -141,16 +149,84 @@ const getRecommendationsDeclaration: FunctionDeclaration = {
         type: Type.STRING,
         description: "Preferred product category",
       },
+      brand: {
+        type: Type.STRING,
+        description: "Preferred brand name",
+      },
+      minPrice: {
+        type: Type.NUMBER,
+        description: "Minimum budget in INR",
+      },
       maxPrice: {
         type: Type.NUMBER,
         description: "Budget ceiling in INR",
+      },
+      condition: {
+        type: Type.STRING,
+        description: "Preferred condition, e.g. 'new', 'used', 'like new'",
       },
       city: {
         type: Type.STRING,
         description: "Preferred city or location",
       },
+      referenceListingId: {
+        type: Type.STRING,
+        description: "Listing ID to find alternatives or compare against",
+      },
+      preferCheaper: {
+        type: Type.BOOLEAN,
+        description: "Set to true when user asks for cheaper alternatives",
+      },
     },
     required: ["query"],
+  },
+};
+
+/* ─── TOOL G — find_budget_alternatives ────────── */
+const findBudgetAlternativesDeclaration: FunctionDeclaration = {
+  name: "find_budget_alternatives",
+  description:
+    "Find listings in the same category priced lower than a reference listing. " +
+    "Use when user asks 'show me cheaper ones' or 'cheaper alternatives to this listing'.",
+  parameters: {
+    type: Type.OBJECT,
+    properties: {
+      referenceListingId: {
+        type: Type.STRING,
+        description: "The 24-character hexadecimal MongoDB ObjectId of the reference listing",
+      },
+      maxBudget: {
+        type: Type.NUMBER,
+        description: "Optional hard price ceiling in INR",
+      },
+      limit: {
+        type: Type.INTEGER,
+        description: "Max results to return (default 5)",
+      },
+    },
+    required: ["referenceListingId"],
+  },
+};
+
+/* ─── TOOL H — find_similar_listings ────────────── */
+const findSimilarListingsDeclaration: FunctionDeclaration = {
+  name: "find_similar_listings",
+  description:
+    "Find listings similar to a reference listing in category, brand, and specifications. " +
+    "Use when user asks 'find similar items' or 'more like this'.",
+  parameters: {
+    type: Type.OBJECT,
+    properties: {
+      referenceListingId: {
+        type: Type.STRING,
+        description: "The 24-character hexadecimal MongoDB ObjectId of the reference listing",
+      },
+      limit: {
+        type: Type.INTEGER,
+        description: "Max results to return (default 5)",
+      },
+    },
+    required: ["referenceListingId"],
   },
 };
 
@@ -164,6 +240,8 @@ export const GEMINI_MARKETPLACE_TOOLS: Tool[] = [
       getSellerInformationDeclaration,
       estimatePriceFairnessDeclaration,
       getRecommendationsDeclaration,
+      findBudgetAlternativesDeclaration,
+      findSimilarListingsDeclaration,
     ],
   },
 ];
@@ -192,7 +270,7 @@ export const MISTRAL_MARKETPLACE_TOOLS: MistralFunctionTool[] = [
       name: "search_products",
       description:
         "Search real Bazari marketplace listings. Use when the user asks to find, browse, or shop for products. " +
-        "Supports keyword search, category filter, price range, condition, and city.",
+        "Supports keyword search, category filter, brand, price range, condition, city, and sorting.",
       parameters: {
         type: "object",
         properties: {
@@ -203,6 +281,10 @@ export const MISTRAL_MARKETPLACE_TOOLS: MistralFunctionTool[] = [
           category: {
             type: "string",
             description: "Product category, e.g. 'Electronics', 'Bikes', 'Furniture'",
+          },
+          brand: {
+            type: "string",
+            description: "Brand preference, e.g. 'Apple', 'Dell', 'Samsung', 'Sony'",
           },
           minPrice: {
             type: "number",
@@ -219,6 +301,10 @@ export const MISTRAL_MARKETPLACE_TOOLS: MistralFunctionTool[] = [
           city: {
             type: "string",
             description: "City name to filter results",
+          },
+          sortBy: {
+            type: "string",
+            description: "Sort criteria: 'relevance', 'price_asc', 'price_desc', 'newest'",
           },
           limit: {
             type: "integer",
@@ -311,8 +397,8 @@ export const MISTRAL_MARKETPLACE_TOOLS: MistralFunctionTool[] = [
     function: {
       name: "get_recommendations",
       description:
-        "Return a ranked list of listings matching the user requirements. " +
-        "Use when user asks 'what do you recommend?' or 'what is the best deal?'.",
+        "Return a ranked list of listings matching user requirements using transparent multi-factor scoring. " +
+        "Use when user asks 'what do you recommend?', 'best laptop for coding', or 'find alternatives'.",
       parameters: {
         type: "object",
         properties: {
@@ -324,16 +410,86 @@ export const MISTRAL_MARKETPLACE_TOOLS: MistralFunctionTool[] = [
             type: "string",
             description: "Preferred product category",
           },
+          brand: {
+            type: "string",
+            description: "Preferred brand name",
+          },
+          minPrice: {
+            type: "number",
+            description: "Minimum budget in INR",
+          },
           maxPrice: {
             type: "number",
             description: "Budget ceiling in INR",
+          },
+          condition: {
+            type: "string",
+            description: "Preferred condition, e.g. 'new', 'used', 'like new'",
           },
           city: {
             type: "string",
             description: "Preferred city or location",
           },
+          referenceListingId: {
+            type: "string",
+            description: "Listing ID to find alternatives or compare against",
+          },
+          preferCheaper: {
+            type: "boolean",
+            description: "Set to true when user asks for cheaper alternatives",
+          },
         },
         required: ["query"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "find_budget_alternatives",
+      description:
+        "Find listings in the same category priced lower than a reference listing. " +
+        "Use when user asks 'show me cheaper ones' or 'cheaper alternatives to this listing'.",
+      parameters: {
+        type: "object",
+        properties: {
+          referenceListingId: {
+            type: "string",
+            description: "The 24-character hexadecimal MongoDB ObjectId of the reference listing",
+          },
+          maxBudget: {
+            type: "number",
+            description: "Optional hard price ceiling in INR",
+          },
+          limit: {
+            type: "integer",
+            description: "Max results to return (default 5)",
+          },
+        },
+        required: ["referenceListingId"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "find_similar_listings",
+      description:
+        "Find listings similar to a reference listing in category, brand, and specifications. " +
+        "Use when user asks 'find similar items' or 'more like this'.",
+      parameters: {
+        type: "object",
+        properties: {
+          referenceListingId: {
+            type: "string",
+            description: "The 24-character hexadecimal MongoDB ObjectId of the reference listing",
+          },
+          limit: {
+            type: "integer",
+            description: "Max results to return (default 5)",
+          },
+        },
+        required: ["referenceListingId"],
       },
     },
   },
@@ -345,7 +501,9 @@ export type MarketplaceToolName =
   | "compare_products"
   | "get_seller_information"
   | "estimate_price_fairness"
-  | "get_recommendations";
+  | "get_recommendations"
+  | "find_budget_alternatives"
+  | "find_similar_listings";
 
 export const VALID_TOOL_NAMES = new Set<string>([
   "search_products",
@@ -354,4 +512,6 @@ export const VALID_TOOL_NAMES = new Set<string>([
   "get_seller_information",
   "estimate_price_fairness",
   "get_recommendations",
+  "find_budget_alternatives",
+  "find_similar_listings",
 ]);

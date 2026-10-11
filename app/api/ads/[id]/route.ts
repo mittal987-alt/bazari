@@ -4,6 +4,11 @@ import { getUserFromToken } from "@/lib/auth";
 import Ad from "@/models/Ad";
 import { checkListingForFraud } from "@/lib/fraudDetection";
 import { generateEmbedding } from "@/services/ai.service";
+import {
+  notifyPriceDrop,
+  matchNewListingToSavedSearches,
+  notifyModerationStatus,
+} from "@/lib/notifications/notification-service";
 
 /* =========================================================
     GET SINGLE AD + INCREASE VIEWS
@@ -152,6 +157,10 @@ export async function PUT(
         { status: 403 }
       );
 
+    const previousPrice = ad.price;
+    const previousStatus = ad.status;
+    const newPrice = body.price !== undefined ? Number(body.price) : ad.price;
+
     const updateData: any = {};
 
     if (body.title !== undefined) updateData.title = body.title;
@@ -205,6 +214,33 @@ export async function PUT(
       { $set: updateData },
       { new: true, runValidators: true }
     );
+
+    // 🔔 SMART ALERTS: Price drop notification for buyers who saved this listing
+    if (newPrice < previousPrice) {
+      notifyPriceDrop(updatedAd, previousPrice, newPrice).catch((dropErr) => {
+        console.warn("[PUT ad:id] Price drop notification skipped:", dropErr);
+      });
+    }
+
+    // 🔔 SMART ALERTS: Status change to active triggers matching saved searches
+    if (previousStatus !== "active" && updatedAd.status === "active") {
+      matchNewListingToSavedSearches(updatedAd).catch((matchErr) => {
+        console.warn("[PUT ad:id] Saved search alert matching skipped:", matchErr);
+      });
+    }
+
+    // 🔔 SMART ALERTS: Moderation notification to seller if status changed
+    if (updatedAd.status !== previousStatus) {
+      notifyModerationStatus(
+        user.id,
+        updatedAd.title,
+        updatedAd.status,
+        fraudResult.reasons?.[0],
+        updatedAd._id.toString()
+      ).catch((modErr) => {
+        console.warn("[PUT ad:id] Moderation status notification skipped:", modErr);
+      });
+    }
 
     return NextResponse.json(updatedAd);
 

@@ -7,15 +7,13 @@ import { usePathname, useRouter } from "next/navigation";
 import clsx from "clsx";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUserStore } from "@/store/userStore";
-import api from "@/lib/api";
 import ThemeToggle from "@/components/common/ThemeToggle";
 import DynamicIcon from "@/components/common/DynamicIcon";
+import NotificationBell from "@/components/notifications/NotificationBell";
 
 const FiMenu = dynamic(() => import("react-icons/fi").then((m) => m.FiMenu), { ssr: false });
 const FiX = dynamic(() => import("react-icons/fi").then((m) => m.FiX), { ssr: false });
 const FiSearch = dynamic(() => import("react-icons/fi").then((m) => m.FiSearch), { ssr: false });
-const FiBell = dynamic(() => import("react-icons/fi").then((m) => m.FiBell), { ssr: false });
-const FiLogOut = dynamic(() => import("react-icons/fi").then((m) => m.FiLogOut), { ssr: false });
 const FiPlus = dynamic(() => import("react-icons/fi").then((m) => m.FiPlus), { ssr: false });
 const FiCamera = dynamic(() => import("react-icons/fi").then((m) => m.FiCamera), { ssr: false });
 const FiLoader = dynamic(() => import("react-icons/fi").then((m) => m.FiLoader), { ssr: false });
@@ -43,7 +41,6 @@ export default function Navbar() {
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
   const user = useUserStore((s) => s.user);
-  const clearUser = useUserStore((s) => s.clearUser);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);
@@ -326,11 +323,13 @@ export default function Navbar() {
 
           {/* --- ACTIONS --- */}
           <div className="flex items-center gap-3 sm:gap-4 shrink-0">
-            <div className="hidden sm:block">
+            <div className="hidden sm:flex items-center gap-2">
               <ThemeToggle />
             </div>
+
+            {user && <NotificationBell />}
             
-            <div className="flex items-center gap-2 sm:gap-3 pl-0 sm:pl-4 sm:border-l sm:border-border/60">
+            <div className="flex items-center gap-2 sm:gap-3 pl-0 sm:pl-3 sm:border-l sm:border-border/60">
               {user ? (
                 <>
                   <Link

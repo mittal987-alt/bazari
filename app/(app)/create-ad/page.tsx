@@ -8,10 +8,11 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   FiArrowLeft, FiCamera, FiTag, FiMapPin, 
-  FiGrid, FiCheck, FiInfo, FiX, FiHeart, FiLoader, FiZap
+  FiGrid, FiCheck, FiInfo, FiX, FiHeart, FiLoader, FiZap, FiTrendingUp
 } from "react-icons/fi";
 
 import { useUserStore } from "@/store/userStore";
+import SellerListingOptimizer from "@/components/seller/SellerListingOptimizer";
 
 export default function CreateAdPage() {
   const router = useRouter();
@@ -33,6 +34,7 @@ export default function CreateAdPage() {
   const [uploading, setUploading] = useState(false);
   const [locating, setLocating] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [isOptimizerOpen, setIsOptimizerOpen] = useState(false);
 
   // --- 📍 GEOLOCATION ---
   const getDeviceLocation = () => {
@@ -188,8 +190,36 @@ export default function CreateAdPage() {
       <div className="relative z-10 max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-10 grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-16">
         
         {/* FORM SECTION */}
+        {/* FORM SECTION */}
         <div className="lg:col-span-7 space-y-8 sm:space-y-12">
           
+          {/* AI SELLER ASSISTANT BANNER */}
+          <div className="bg-gradient-to-r from-primary/10 via-card to-primary/5 p-4 sm:p-5 rounded-2xl border border-primary/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center text-primary shrink-0">
+                <FiZap size={20} className="fill-primary" />
+              </div>
+              <div>
+                <h3 className="text-sm font-black text-foreground flex items-center gap-2">
+                  AI Seller Assistant & Optimizer
+                  <span className="text-[9px] bg-primary/15 text-primary px-2 py-0.5 rounded-full uppercase tracking-wider font-bold">
+                    Smart
+                  </span>
+                </h3>
+                <p className="text-[11px] text-muted-foreground">
+                  Generate fact-based descriptions, check market prices, and audit listing completeness.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsOptimizerOpen(true)}
+              className="w-full sm:w-auto px-5 py-2.5 bg-primary text-primary-foreground font-black text-xs uppercase tracking-wider rounded-xl hover:bg-primary/90 transition-all shadow-md shadow-primary/20 flex items-center justify-center gap-2 shrink-0 active:scale-95"
+            >
+              <FiZap size={14} /> Open Assistant
+            </button>
+          </div>
+
           <section className="space-y-6">
             <div className="flex items-center gap-3 mb-6 sm:mb-8">
                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center font-bold shadow-sm border border-primary/20 shrink-0">01</div>
@@ -198,7 +228,31 @@ export default function CreateAdPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               <PremiumInput label="Listing Title" placeholder="e.g. iPhone 15 Pro Max" value={form.title} onChange={(v: string) => setForm({...form, title: v})} icon={<FiTag />} />
-              <PremiumInput label="Price (₹)" type="number" placeholder="0.00" value={form.price} onChange={(v: string) => setForm({...form, price: v})} icon={<span className="font-bold text-xs">₹</span>} />
+              
+              <div className="space-y-1.5 sm:space-y-2">
+                <div className="flex items-center justify-between ml-2 sm:ml-4">
+                  <label className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-muted-foreground">Price (₹)</label>
+                  <button
+                    type="button"
+                    onClick={() => setIsOptimizerOpen(true)}
+                    className="text-[9px] font-black uppercase tracking-wider text-primary hover:underline flex items-center gap-1"
+                  >
+                    <FiTrendingUp size={11} /> Suggest Price
+                  </button>
+                </div>
+                <div className="relative group">
+                  <div className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors flex items-center justify-center">
+                    <span className="font-bold text-xs">₹</span>
+                  </div>
+                  <input
+                    type="number"
+                    placeholder="0.00"
+                    value={form.price}
+                    onChange={(e) => setForm({ ...form, price: e.target.value })}
+                    className="w-full pl-10 sm:pl-12 pr-4 sm:pr-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl bg-card border border-border shadow-sm outline-none focus:ring-2 focus:ring-primary/50 transition-all font-semibold text-sm placeholder:font-medium placeholder:text-muted-foreground/40 text-foreground"
+                  />
+                </div>
+              </div>
               
               <div className="relative group">
                 <PremiumInput 
@@ -244,15 +298,15 @@ export default function CreateAdPage() {
               <div className="md:col-span-2 space-y-2">
                 <div className="flex flex-wrap items-center justify-between ml-2 sm:ml-4 gap-2">
                   <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Description</label>
-                  <button 
-                    type="button"
-                    onClick={handleGenerateDescription}
-                    disabled={generating || !form.title}
-                    className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-primary disabled:opacity-50 transition-all hover:-translate-y-0.5 bg-primary/10 px-3 py-1 rounded-full border border-primary/20"
-                  >
-                    {generating ? <FiLoader className="animate-spin" /> : <FiZap className="fill-current" />}
-                    {generating ? "Generating..." : "AI Generate"}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button 
+                      type="button"
+                      onClick={() => setIsOptimizerOpen(true)}
+                      className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-primary hover:-translate-y-0.5 transition-all bg-primary/10 px-3 py-1 rounded-full border border-primary/20"
+                    >
+                      <FiZap size={11} className="fill-current" /> AI Assistant
+                    </button>
+                  </div>
                 </div>
                 <textarea 
                   placeholder="Tell buyers more about your product..." 
@@ -352,6 +406,29 @@ export default function CreateAdPage() {
             </div>
         </div>
       </div>
+
+      {/* AI SELLER ASSISTANT MODAL */}
+      <SellerListingOptimizer
+        isOpen={isOptimizerOpen}
+        onClose={() => setIsOptimizerOpen(false)}
+        listingData={{
+          title: form.title,
+          price: form.price,
+          category: form.category,
+          description: form.description,
+          location: form.location,
+          yearsUsed: form.yearsUsed,
+          images: images,
+        }}
+        onApplyChanges={(changes) => {
+          setForm((prev) => ({
+            ...prev,
+            title: changes.title !== undefined ? changes.title : prev.title,
+            price: changes.price !== undefined ? String(changes.price) : prev.price,
+            description: changes.description !== undefined ? changes.description : prev.description,
+          }));
+        }}
+      />
     </div>
   );
 }

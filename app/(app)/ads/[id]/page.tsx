@@ -9,8 +9,10 @@ import api from "@/lib/api";
 import { useUserStore } from "@/store/userStore"; 
 import { 
   FiMapPin, FiClock, FiHeart, FiMessageSquare, 
-  FiShare2, FiChevronLeft, FiChevronRight, FiShield, FiNavigation, FiCheck, FiZap, FiLoader, FiTrendingUp
+  FiShare2, FiChevronLeft, FiChevronRight, FiShield, FiNavigation, FiCheck, FiZap, FiLoader, FiTrendingUp, FiFlag
 } from "react-icons/fi";
+import ListingTrustBadge from "@/components/trust/ListingTrustBadge";
+import ReportListingModal from "@/components/trust/ReportListingModal";
 
 type Ad = {
   _id: string;
@@ -49,6 +51,7 @@ export default function AdDetailsPage() {
   const [pricingInsight, setPricingInsight] = useState<{ discountPercent: number; explanation: string } | null>(null);
   const [loadingInsight, setLoadingInsight] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
 
   useEffect(() => {
     const fetchAd = async () => {
@@ -482,8 +485,36 @@ export default function AdDetailsPage() {
               </div>
             )}
           </div>
+
+          {/* ── Phase 6: AI Trust Badge (enhanced risk assessment) ── */}
+          {ad._id && (
+            <div className="space-y-3">
+              <ListingTrustBadge listingId={ad._id} />
+            </div>
+          )}
+
+          {/* ── Report this listing ── */}
+          {!isOwner && (
+            <button
+              onClick={() => setShowReportModal(true)}
+              className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-rose-500 transition-colors"
+            >
+              <FiFlag size={12} />
+              Report this listing
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Report Modal */}
+      {ad._id && (
+        <ReportListingModal
+          listingId={ad._id}
+          listingTitle={ad.title}
+          isOpen={showReportModal}
+          onClose={() => setShowReportModal(false)}
+        />
+      )}
 
       {/* Invite Modal */}
       <AnimatePresence>

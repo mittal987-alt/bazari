@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { socket } from "@/lib/socket";
 import { AnimatePresence, motion } from "framer-motion";
-import { FiMessageCircle, FiX } from "react-icons/fi";
+import { FiMessageCircle, FiX, FiTrendingDown, FiSearch, FiBell } from "react-icons/fi";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useUserStore } from "@/store/userStore";
@@ -27,16 +27,16 @@ export default function NotificationProvider({ children }: { children: React.Rea
 
     const handleNotification = (data: any) => {
       // Don't show toast if we are already in that specific chat room
-      if (pathname === `/chats/${data.chatId}`) {
+      if (data.chatId && pathname === `/chats/${data.chatId}`) {
         return;
       }
       
       setNotification(data);
 
-      // Auto dismiss after 5 seconds
+      // Auto dismiss after 6 seconds
       setTimeout(() => {
         setNotification(null);
-      }, 5000);
+      }, 6000);
     };
 
     socket.on("new_notification", handleNotification);
@@ -45,6 +45,10 @@ export default function NotificationProvider({ children }: { children: React.Rea
       socket.off("new_notification", handleNotification);
     };
   }, [pathname, userId]);
+
+  const targetLink = notification?.link || (notification?.chatId ? `/chats/${notification.chatId}` : "/ads");
+  const notifTitle = notification?.title || (notification?.chatId ? "New Message" : "Marketplace Alert");
+  const notifText = notification?.text || notification?.message || "";
 
   return (
     <>
@@ -61,21 +65,29 @@ export default function NotificationProvider({ children }: { children: React.Rea
               className="bg-card rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.15)] border border-border p-4 w-80 flex items-start gap-4"
             >
               <div className="bg-primary/10 text-primary p-3 rounded-xl shrink-0">
-                <FiMessageCircle size={20} />
+                {notification.type === "price_drop" ? (
+                  <FiTrendingDown size={20} className="text-emerald-500" />
+                ) : notification.type === "saved_search_match" ? (
+                  <FiSearch size={20} className="text-blue-500" />
+                ) : notification.type === "new_message" || notification.type === "seller_inquiry" ? (
+                  <FiMessageCircle size={20} className="text-primary" />
+                ) : (
+                  <FiBell size={20} className="text-amber-500" />
+                )}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-1">
-                  New Message
+                <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-1 truncate">
+                  {notifTitle}
                 </p>
-                <p className="text-sm font-bold text-foreground truncate">
-                  {notification.text}
+                <p className="text-sm font-bold text-foreground line-clamp-2">
+                  {notifText}
                 </p>
                 <Link 
-                  href={`/chats/${notification.chatId}`}
+                  href={targetLink}
                   onClick={() => setNotification(null)}
                   className="text-xs text-muted-foreground hover:text-primary font-semibold mt-2 inline-block transition-colors"
                 >
-                  View Conversation →
+                  View Details →
                 </Link>
               </div>
               <button 

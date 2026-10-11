@@ -8,7 +8,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "test": "tsx scripts/test-agent-resilience.ts"
+    "test": "tsx scripts/test-agent-resilience.ts && tsx scripts/test-phase5-seller-assistant.ts && tsx scripts/test-phase7-intelligent-search.ts && tsx scripts/test-phase8-alerts-notifications.ts",
+    "test:phase5": "tsx scripts/test-phase5-seller-assistant.ts",
+    "test:phase7": "tsx scripts/test-phase7-intelligent-search.ts",
+    "test:phase8": "tsx scripts/test-phase8-alerts-notifications.ts"
   },
   "dependencies": {
     "@google-cloud/vision": "^5.3.5",

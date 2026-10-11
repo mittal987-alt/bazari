@@ -15,7 +15,9 @@ import {
   FiClock,
   FiInfo,
   FiCheckCircle,
+  FiZap,
 } from "react-icons/fi";
+import SellerListingOptimizer from "@/components/seller/SellerListingOptimizer";
 
 export default function EditAdPage() {
   const router = useRouter();
@@ -28,6 +30,7 @@ export default function EditAdPage() {
     description: "",
     location: "",
     yearsUsed: "",
+    category: "",
   });
 
   const [images, setImages] = useState<string[]>([]);
@@ -35,13 +38,14 @@ export default function EditAdPage() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [isOptimizerOpen, setIsOptimizerOpen] = useState(false);
 
   // --- FETCH AD DATA ---
   useEffect(() => {
     const fetchAd = async () => {
       try {
         const res = await api.get(`/ads/${id}`);
-        const { title, price, description, locationName, yearsUsed, images } = res.data;
+        const { title, price, description, locationName, yearsUsed, images, category } = res.data;
 
         setForm({
           title: title || "",
@@ -49,6 +53,7 @@ export default function EditAdPage() {
           description: description || "",
           location: locationName || "",
           yearsUsed: yearsUsed?.toString() || "",
+          category: category || "",
         });
 
         setImages(images || []);
@@ -169,13 +174,23 @@ export default function EditAdPage() {
             <p className="font-bold text-foreground text-sm truncate max-w-[200px]">{form.title || "Untitled Listing"}</p>
           </div>
 
-          <button 
-            onClick={handleUpdate} 
-            disabled={saving} 
-            className="bg-primary text-primary-foreground px-8 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-primary/20 hover:bg-primary/90 transition-all flex items-center gap-2 disabled:opacity-50"
-          >
-            {saving ? "Saving..." : <><FiSave /> Save Changes</>}
-          </button>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <button
+              type="button"
+              onClick={() => setIsOptimizerOpen(true)}
+              className="bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 px-3.5 sm:px-5 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center gap-1.5"
+            >
+              <FiZap /> <span className="hidden sm:inline">AI Optimizer</span>
+            </button>
+
+            <button 
+              onClick={handleUpdate} 
+              disabled={saving} 
+              className="bg-primary text-primary-foreground px-6 sm:px-8 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-primary/20 hover:bg-primary/90 transition-all flex items-center gap-2 disabled:opacity-50"
+            >
+              {saving ? "Saving..." : <><FiSave /> Save Changes</>}
+            </button>
+          </div>
         </div>
       </nav>
 
@@ -244,8 +259,28 @@ export default function EditAdPage() {
           </motion.section>
         </div>
 
-        {/* --- 🛡️ RIGHT COLUMN: TIPS & DELETION --- */}
+        {/* --- 🛡️ RIGHT COLUMN: TIPS, AI & DELETION --- */}
         <aside className="lg:col-span-4 space-y-6">
+          {/* AI OPTIMIZATION CARD */}
+          <div className="bg-gradient-to-br from-primary/10 via-card to-primary/5 p-8 rounded-[2.5rem] border border-primary/20 shadow-sm space-y-4">
+            <div className="flex items-center gap-3 text-primary">
+              <div className="w-8 h-8 rounded-xl bg-primary/20 flex items-center justify-center font-bold">
+                <FiZap />
+              </div>
+              <h3 className="text-xs font-black uppercase tracking-widest text-foreground">AI Seller Assistant</h3>
+            </div>
+            <p className="text-[11px] font-medium text-muted-foreground leading-relaxed">
+              Audit completeness, refresh market price valuation against live MongoDB comparables, and polish listing descriptions.
+            </p>
+            <button
+              type="button"
+              onClick={() => setIsOptimizerOpen(true)}
+              className="w-full py-3.5 bg-primary text-primary-foreground font-black text-[10px] uppercase tracking-widest rounded-xl hover:bg-primary/90 transition-all flex items-center justify-center gap-2 shadow-md shadow-primary/20"
+            >
+              <FiZap /> Launch Optimizer
+            </button>
+          </div>
+
           <div className="bg-card p-8 rounded-[2.5rem] border border-border shadow-sm">
             <div className="flex items-center gap-3 text-primary mb-6">
               <FiInfo />
@@ -275,6 +310,30 @@ export default function EditAdPage() {
           </div>
         </aside>
       </main>
+
+      {/* AI SELLER ASSISTANT MODAL */}
+      <SellerListingOptimizer
+        isOpen={isOptimizerOpen}
+        onClose={() => setIsOptimizerOpen(false)}
+        listingData={{
+          title: form.title,
+          price: form.price,
+          category: form.category,
+          description: form.description,
+          location: form.location,
+          yearsUsed: form.yearsUsed,
+          images: images,
+          listingId: String(id),
+        }}
+        onApplyChanges={(changes) => {
+          setForm((prev) => ({
+            ...prev,
+            title: changes.title !== undefined ? changes.title : prev.title,
+            price: changes.price !== undefined ? String(changes.price) : prev.price,
+            description: changes.description !== undefined ? changes.description : prev.description,
+          }));
+        }}
+      />
     </div>
   );
 }

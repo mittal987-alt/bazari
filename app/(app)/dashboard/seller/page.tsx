@@ -8,7 +8,7 @@ import api from "@/lib/api";
 import {
   FiPlus, FiEdit3, FiTrash2, FiMessageCircle, FiEye, FiActivity,
   FiArrowUpRight, FiPackage, FiStar, FiSearch, FiClock, FiChevronRight,
-  FiAlertCircle, FiCheckCircle, FiX
+  FiAlertCircle, FiCheckCircle, FiX, FiZap
 } from "react-icons/fi";
 import { socket } from "@/lib/socket";
 import { useUserStore } from "@/store/userStore";
@@ -332,10 +332,18 @@ function PremiumListingCard({ ad, onDelete, onMarkSold, chats }: any) {
                  <FiCheckCircle className="mr-1.5" size={14} /> Mark Sold
                </button>
              )}
-             <Link href={`/dashboard/seller/edit/${ad._id}`} className="w-9 h-9 sm:w-10 sm:h-10 bg-muted/50 hover:bg-primary/10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-primary transition-all border border-transparent hover:border-primary/20">
+             <Link
+               href={`/dashboard/seller/edit/${ad._id}`}
+               className="w-auto h-9 sm:h-10 px-3 bg-primary/10 hover:bg-primary/20 rounded-xl flex items-center justify-center text-primary transition-all font-bold text-[10px] sm:text-xs uppercase tracking-wider border border-primary/20 gap-1.5"
+               title="Optimize Listing with AI"
+             >
+               <FiZap size={14} />
+               <span className="hidden md:inline">Optimize</span>
+             </Link>
+             <Link href={`/dashboard/seller/edit/${ad._id}`} className="w-9 h-9 sm:w-10 sm:h-10 bg-muted/50 hover:bg-primary/10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-primary transition-all border border-transparent hover:border-primary/20" title="Edit Listing">
               <FiEdit3 size={16} />
              </Link>
-             <button onClick={() => onDelete(ad._id)} className="w-9 h-9 sm:w-10 sm:h-10 bg-muted/50 hover:bg-destructive/10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-destructive transition-all border border-transparent hover:border-destructive/20">
+             <button onClick={() => onDelete(ad._id)} className="w-9 h-9 sm:w-10 sm:h-10 bg-muted/50 hover:bg-destructive/10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-destructive transition-all border border-transparent hover:border-destructive/20" title="Delete Listing">
               <FiTrash2 size={16} />
              </button>
           </div>

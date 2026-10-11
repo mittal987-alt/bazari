@@ -61,6 +61,17 @@ export async function POST(
         buyer: user.id,
         seller: ad.user,
       });
+
+      // 🔔 SMART ALERTS: Notify seller about legitimate buyer inquiry
+      import("@/lib/notifications/notification-service").then(({ notifySellerInquiry }) => {
+        notifySellerInquiry(
+          ad.user.toString(),
+          user.name || "A buyer",
+          ad.title,
+          ad._id.toString(),
+          chat._id.toString()
+        ).catch((err) => console.warn("[chat:start] Seller inquiry notification skipped:", err));
+      }).catch(() => {});
     }
 
     return NextResponse.json({
