@@ -1,9 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
+import { getUserFromToken } from "@/lib/auth";
+import { aiLimiter, getClientIp } from "@/lib/rate-limit";
+import { logger } from "@/lib/observability/logger";
 
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
+  // ── Authentication ───────────────────────────────────────────────────
+  const user = await getUserFromToken();
+  if (!user?.id) {
+    return NextResponse.json({ message: "Authentication required" }, { status: 401 });
+  }
+
+  // ── Rate limiting ───────────────────────────────────────────────────
+  const rl = aiLimiter.check(getClientIp(req));
+  if (rl.limited) {
+    return NextResponse.json(
+      { message: "Too many requests. Please wait a moment." },
+      { status: 429, headers: { "Retry-After": String(Math.ceil((rl.resetMs - Date.now()) / 1000)) } }
+    );
+  }
+
   try {
     const { productName, originalPrice, description } = await req.json();
 
@@ -104,7 +122,9 @@ Respond ONLY with a JSON object in this exact format:
     });
 
   } catch (error: any) {
-    console.error("Negotiation API Route Error:", error);
+    logger.error("Negotiation API error", {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json({ message: error.message || "Failed to generate offer options" }, { status: 500 });
   }
 }

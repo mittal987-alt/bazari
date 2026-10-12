@@ -3,8 +3,20 @@ import crypto from "crypto";
 import nodemailer from "nodemailer";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
+import { authLimiter, getClientIp } from "@/lib/rate-limit";
+import { logger } from "@/lib/observability/logger";
 
 export async function POST(req: Request) {
+  // ── Rate limiting ──────────────────────────────────────────────────────
+  const ip = getClientIp(req);
+  const rl = authLimiter.check(ip);
+  if (rl.limited) {
+    // Return a generic success message to prevent email enumeration via timing
+    return NextResponse.json({
+      message: "If that email exists, a reset link has been sent.",
+    });
+  }
+
   try {
     await connectDB();
 
@@ -55,9 +67,7 @@ export async function POST(req: Request) {
       }
     );
 
-    console.log("Reset token saved for:", user.email);
-    console.log("Token (first 20):", hashedToken.substring(0, 20));
-    console.log("Expiry:", expiry);
+    logger.info("Password reset token issued", { userId: String(user._id) });
 
     // Build reset URL
     const baseUrl =
@@ -138,7 +148,9 @@ export async function POST(req: Request) {
       message: "If that email exists, a reset link has been sent.",
     });
   } catch (error) {
-    console.error("FORGOT PASSWORD ERROR:", error);
+    logger.error("Forgot password error", {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json({ message: "Server error" }, { status: 500 });
   }
 }

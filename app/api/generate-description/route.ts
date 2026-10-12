@@ -1,10 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateSellerDescription } from "@/lib/ai/seller-assistant";
 import { sanitizeInputString } from "@/lib/ai/seller-security";
+import { getUserFromToken } from "@/lib/auth";
+import { aiLimiter, getClientIp } from "@/lib/rate-limit";
+import { logger } from "@/lib/observability/logger";
 
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
+  // ── Authentication ───────────────────────────────────────────────────
+  const user = await getUserFromToken();
+  if (!user?.id) {
+    return NextResponse.json({ message: "Authentication required" }, { status: 401 });
+  }
+
+  // ── Rate limiting ───────────────────────────────────────────────────
+  const rl = aiLimiter.check(getClientIp(req));
+  if (rl.limited) {
+    return NextResponse.json(
+      { message: "Too many requests. Please wait a moment." },
+      { status: 429, headers: { "Retry-After": String(Math.ceil((rl.resetMs - Date.now()) / 1000)) } }
+    );
+  }
+
   try {
     let body: any;
     try {
@@ -44,7 +62,9 @@ export async function POST(req: NextRequest) {
       provider: result.provider,
     });
   } catch (error: any) {
-    console.error("Description Generation Error:", error);
+    logger.error("Description generation error", {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json(
       { message: error.message || "Failed to generate description" },
       { status: 500 }

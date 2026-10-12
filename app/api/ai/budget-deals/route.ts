@@ -2,10 +2,28 @@ import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
 import { connectDB } from "@/lib/db";
 import Ad from "@/models/Ad";
+import { getUserFromToken } from "@/lib/auth";
+import { aiLimiter, getClientIp } from "@/lib/rate-limit";
+import { logger } from "@/lib/observability/logger";
 
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
+  // ── Authentication ───────────────────────────────────────────────────
+  const user = await getUserFromToken();
+  if (!user?.id) {
+    return NextResponse.json({ message: "Authentication required" }, { status: 401 });
+  }
+
+  // ── Rate limiting ───────────────────────────────────────────────────
+  const rl = aiLimiter.check(getClientIp(req));
+  if (rl.limited) {
+    return NextResponse.json(
+      { message: "Too many requests. Please wait a moment." },
+      { status: 429, headers: { "Retry-After": String(Math.ceil((rl.resetMs - Date.now()) / 1000)) } }
+    );
+  }
+
   try {
     await connectDB();
     const { budget, query } = await req.json();
@@ -73,7 +91,7 @@ export async function POST(req: NextRequest) {
         isMock = true;
       }
     } else {
-      console.warn("No GEMINI_API_KEY — using smart keyword fallback.");
+      logger.debug("No GEMINI_API_KEY — using smart keyword fallback for budget-deals");
       isMock = true;
     }
 
@@ -133,7 +151,9 @@ export async function POST(req: NextRequest) {
     });
 
   } catch (error: any) {
-    console.error("Budget AI Error:", error);
+    logger.error("Budget AI error", {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json({ message: error.message || "Failed to generate recommendations" }, { status: 500 });
   }
 }

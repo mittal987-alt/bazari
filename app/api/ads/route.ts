@@ -12,11 +12,22 @@ import {
 import { interpretSearchQuery } from "@/lib/search/search-interpreter";
 import { rankListings } from "@/lib/search/search-ranking";
 import { matchNewListingToSavedSearches } from "@/lib/notifications/notification-service";
+import { searchLimiter, authLimiter, getClientIp } from "@/lib/rate-limit";
+import { logger } from "@/lib/observability/logger";
 
 export const runtime = "nodejs";
 
 /* ===================== GET ===================== */
 export async function GET(req: NextRequest) {
+  // Rate-limit search endpoint
+  const searchRl = searchLimiter.check(getClientIp(req));
+  if (searchRl.limited) {
+    return NextResponse.json(
+      { message: "Too many requests. Please slow down." },
+      { status: 429, headers: { "Retry-After": String(Math.ceil((searchRl.resetMs - Date.now()) / 1000)) } }
+    );
+  }
+
   try {
     await connectDB();
 
@@ -211,10 +222,26 @@ export async function GET(req: NextRequest) {
 
 /* ===================== POST ===================== */
 export async function POST(req: NextRequest) {
+  // Rate-limit ad creation
+  const postRl = authLimiter.check(getClientIp(req));
+  if (postRl.limited) {
+    return NextResponse.json(
+      { message: "Too many ad creation attempts. Please wait a minute." },
+      { status: 429, headers: { "Retry-After": String(Math.ceil((postRl.resetMs - Date.now()) / 1000)) } }
+    );
+  }
+
   try {
     await connectDB();
 
+    // Authentication is mandatory — never accept userId from the request body
     const authUser = await getUserFromToken();
+    if (!authUser?.id) {
+      return NextResponse.json(
+        { message: "Unauthorized: Please log in to post an ad" },
+        { status: 401 }
+      );
+    }
 
     const body = await req.json();
 
@@ -224,7 +251,6 @@ export async function POST(req: NextRequest) {
       location,
       category,
       images,
-      userId,
       lat,
       lng,
       isGroupBuy,
@@ -232,14 +258,8 @@ export async function POST(req: NextRequest) {
       groupBuyPrice
     } = body;
 
-    const effectiveUserId = authUser?.id || userId;
-
-    if (!effectiveUserId) {
-      return NextResponse.json(
-        { message: "Unauthorized: Please log in to post an ad" },
-        { status: 401 }
-      );
-    }
+    // Use ONLY the verified JWT identity — ignore any userId sent in the body
+    const effectiveUserId = authUser.id;
 
     // 🔥 VALIDATION
     if (!title || price === undefined || !location || !category || lat === undefined || lng === undefined) {

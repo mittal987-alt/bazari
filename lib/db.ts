@@ -3,12 +3,12 @@ import mongoose from "mongoose";
 const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/bazzari";
 
 declare global {
-  // eslint-disable-next-line no-var
   var mongooseCache: {
     conn: typeof mongoose | null;
     promise: Promise<typeof mongoose> | null;
   } | undefined;
 }
+
 
 let cached = global.mongooseCache;
 

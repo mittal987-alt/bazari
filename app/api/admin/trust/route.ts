@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { getUserFromToken } from "@/lib/auth";
 import Report from "@/models/Report";
+import Ad from "@/models/Ad";
 import mongoose from "mongoose";
 import { analyseListingRiskBatch } from "@/lib/ai/trust-engine";
+
 
 export const runtime = "nodejs";
 

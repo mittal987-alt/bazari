@@ -3,61 +3,74 @@ import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
+import { authLimiter, getClientIp } from "@/lib/rate-limit";
+import { logger } from "@/lib/observability/logger";
 
 export async function POST(req: Request) {
+  // ── Rate limiting ────────────────────────────────────────────────────────
+  const ip = getClientIp(req);
+  const rl = authLimiter.check(ip);
+  if (rl.limited) {
+    return NextResponse.json(
+      { message: "Too many attempts. Please wait a minute." },
+      {
+        status: 429,
+        headers: { "Retry-After": String(Math.ceil((rl.resetMs - Date.now()) / 1000)) },
+      }
+    );
+  }
+
   try {
     await connectDB();
 
-    const { token, email, password } = await req.json();
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== "object") {
+      return NextResponse.json({ message: "Invalid request body" }, { status: 400 });
+    }
 
-    console.log("RESET ATTEMPT - email:", email, "token length:", token?.length);
+    const { token, email, password } = body as Record<string, unknown>;
 
-    if (!token || !email || !password) {
+    if (
+      typeof token !== "string" || !token ||
+      typeof email !== "string" || !email ||
+      typeof password !== "string" || !password
+    ) {
       return NextResponse.json(
         { message: "Token, email, and new password are required" },
         { status: 400 }
       );
     }
 
-    if (password.length < 6) {
+    if (password.length < 8) {
       return NextResponse.json(
-        { message: "Password must be at least 6 characters" },
+        { message: "Password must be at least 8 characters" },
         { status: 400 }
       );
     }
 
-    // Hash the incoming raw token to match stored hashed token
-    const hashedToken = crypto
-      .createHash("sha256")
-      .update(token)
-      .digest("hex");
+    // Hash the incoming raw token to compare against the stored hash
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
 
-    console.log("Looking for token hash:", hashedToken.substring(0, 20) + "...");
-
-    // Find user with matching email first (for better debugging)
+    // Look up by email first, then validate token — avoids timing leak on token
     const userByEmail = await User.findOne({
-      email: email.toLowerCase().trim(),
+      email: email.toString().trim().toLowerCase(),
     });
 
     if (!userByEmail) {
-      console.log("No user found with email:", email);
       return NextResponse.json(
         { message: "Invalid or expired reset link. Please request a new one." },
         { status: 400 }
       );
     }
 
-    console.log("User found. Stored token:", userByEmail.resetPasswordToken?.substring(0, 20) + "...");
-    console.log("Token expiry:", userByEmail.resetPasswordExpiry);
-    console.log("Now:", new Date());
-    console.log("Token match:", userByEmail.resetPasswordToken === hashedToken);
-    console.log("Token expired:", userByEmail.resetPasswordExpiry && userByEmail.resetPasswordExpiry < new Date());
+    // Validate token match using crypto.timingSafeEqual to prevent timing attacks
+    const storedToken = userByEmail.resetPasswordToken;
+    const tokenValid =
+      storedToken &&
+      storedToken.length === hashedToken.length &&
+      crypto.timingSafeEqual(Buffer.from(storedToken, "hex"), Buffer.from(hashedToken, "hex"));
 
-    // Validate token and expiry
-    if (
-      !userByEmail.resetPasswordToken ||
-      userByEmail.resetPasswordToken !== hashedToken
-    ) {
+    if (!tokenValid) {
       return NextResponse.json(
         { message: "Invalid reset link. Please request a new one." },
         { status: 400 }
@@ -74,10 +87,9 @@ export async function POST(req: Request) {
       );
     }
 
-    // Hash new password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Hash new password and clear the reset token atomically
+    const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Update password and clear reset fields using findOneAndUpdate
     await User.findOneAndUpdate(
       { _id: userByEmail._id },
       {
@@ -86,14 +98,16 @@ export async function POST(req: Request) {
       }
     );
 
-    console.log("PASSWORD RESET SUCCESS:", userByEmail.email);
+    logger.info("Password reset successful", { userId: String(userByEmail._id) });
 
     return NextResponse.json({
       message: "Password reset successfully. You can now log in.",
       success: true,
     });
   } catch (error) {
-    console.error("RESET PASSWORD ERROR:", error);
+    logger.error("Reset password error", {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return NextResponse.json({ message: "Server error" }, { status: 500 });
   }
 }

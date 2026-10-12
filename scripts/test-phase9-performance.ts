@@ -21,9 +21,10 @@ import Message from "../models/Message";
 import Notification from "../models/Notification";
 import { connectDB, isDbConnected } from "../lib/db";
 import { interpretSearchQuery } from "../lib/search/search-interpreter";
-import { sanitizeLogData, getCorrelationId, logger } from "../lib/observability/logger";
+import { sanitizeLogData, getCorrelationId } from "../lib/observability/logger";
 import { apiError, apiSuccess } from "../lib/api-response";
-import { withRetry, extractErrorInfo } from "../lib/ai/resilience";
+import { withRetry } from "../lib/ai/resilience";
+
 
 let passedCount = 0;
 let failedCount = 0;
