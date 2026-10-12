@@ -74,6 +74,7 @@ const NotificationSchema = new mongoose.Schema(
 // Compound index for querying user's notifications in chronological order
 NotificationSchema.index({ recipient: 1, isRead: 1, createdAt: -1 });
 NotificationSchema.index({ recipient: 1, createdAt: -1 });
+NotificationSchema.index({ recipient: 1, dedupKey: 1 }, { sparse: true });
 
 export default mongoose.models.Notification ||
   mongoose.model("Notification", NotificationSchema);

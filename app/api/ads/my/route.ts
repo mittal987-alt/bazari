@@ -15,12 +15,15 @@ export async function GET() {
       );
     }
 
-    // Only return current user's ads
-    const ads = await Ad.find({ user: user.id }).sort({
-      createdAt: -1,
-    });
+    // Only return current user's ads (project out heavy embedding and internal arrays)
+    const ads = await Ad.find({ user: user.id })
+      .select("-embedding -savedBy -groupBuyers")
+      .sort({ createdAt: -1 })
+      .limit(100)
+      .lean();
 
     return NextResponse.json(ads);
+
   } catch (error) {
     console.error("FETCH MY ADS ERROR:", error);
     return NextResponse.json(

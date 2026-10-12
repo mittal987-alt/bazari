@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
+
 import { motion } from "framer-motion";
 import { FiHeart, FiMapPin, FiShare2, FiZap, FiCheckCircle, FiStar } from "react-icons/fi";
 import api from "@/lib/api";
@@ -23,6 +25,10 @@ export default function AdCard({ ad }: { ad: Ad }) {
   const [isSaved, setIsSaved] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  const fallbackImg = "https://images.unsplash.com/photo-1560393464-5c69a73c5770?q=80&w=800&auto=format&fit=crop";
+  const imageSrc = ad.image?.startsWith("http") ? ad.image : fallbackImg;
+  const isOptimizedHost = imageSrc.includes("res.cloudinary.com") || imageSrc.includes("images.unsplash.com");
+
   const handleSave = async (e: React.MouseEvent) => {
     e.preventDefault(); // Stop navigation if card is wrapped in a Link
     setSaving(true);
@@ -44,15 +50,16 @@ export default function AdCard({ ad }: { ad: Ad }) {
     >
       {/* --- 🖼️ IMAGE SECTION --- */}
       <div className="relative aspect-[4/4] overflow-hidden bg-muted">
-        <img
-          src={ad.image}
-          alt={ad.title}
+        <Image
+          src={imageSrc}
+          alt={ad.title || "Product listing"}
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+          unoptimized={!isOptimizedHost}
           loading="lazy"
-          onError={(e) => {
-            e.currentTarget.src = "https://images.unsplash.com/photo-1560393464-5c69a73c5770?q=80&w=800&auto=format&fit=crop";
-          }}
         />
+
 
         {/* TOP OVERLAYS */}
         <div className="absolute top-4 left-4 flex gap-2">

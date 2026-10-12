@@ -286,6 +286,39 @@ export function interpretQueryDeterministic(
  * AI-assisted search query understanding using hosted Mistral primary with Gemini fallback.
  * Falls back transparently to interpretQueryDeterministic if both providers are unavailable.
  */
+interface CacheEntry {
+  result: InterpretedSearchQuery;
+  expiresAt: number;
+}
+
+const queryInterpretationCache = new Map<string, CacheEntry>();
+const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+const MAX_CACHE_SIZE = 300;
+
+function getCachedInterpretation(key: string): InterpretedSearchQuery | null {
+  const entry = queryInterpretationCache.get(key);
+  if (!entry) return null;
+  if (Date.now() > entry.expiresAt) {
+    queryInterpretationCache.delete(key);
+    return null;
+  }
+  return entry.result;
+}
+
+function setCachedInterpretation(key: string, result: InterpretedSearchQuery): void {
+  if (queryInterpretationCache.size >= MAX_CACHE_SIZE) {
+    let count = 0;
+    for (const k of queryInterpretationCache.keys()) {
+      queryInterpretationCache.delete(k);
+      if (++count >= 50) break;
+    }
+  }
+  queryInterpretationCache.set(key, {
+    result,
+    expiresAt: Date.now() + CACHE_TTL_MS,
+  });
+}
+
 export async function interpretSearchQuery(
   rawText: string,
   options: SearchInterpretOptions = {}
@@ -299,7 +332,15 @@ export async function interpretSearchQuery(
     return interpretQueryDeterministic(text, options);
   }
 
+  // Check TTL cache for identical recent queries to eliminate duplicate AI latency
+  const cacheKey = `${text.toLowerCase()}|${options.userCity || ""}|${options.activeListingId || ""}`;
+  const cached = getCachedInterpretation(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
   const systemPrompt = `You are the Bazari Marketplace Intelligent Search Parser.
+
 Convert the buyer's natural language shopping request into a strictly validated JSON search object.
 
 Rules:
@@ -332,13 +373,15 @@ Rules:
       const content = response.choices?.[0]?.message?.content;
       if (typeof content === "string") {
         const parsed = JSON.parse(content);
-        return sanitizeInterpretedQuery(
+        const result = sanitizeInterpretedQuery(
           {
             ...parsed,
             referenceListingId: options.activeListingId,
           },
           "mistral"
         );
+        setCachedInterpretation(cacheKey, result);
+        return result;
       }
     } catch (err) {
       console.warn("[search:interpreter] Mistral failed, trying Gemini fallback:", extractErrorInfo(err).message);
@@ -374,13 +417,15 @@ Rules:
       const candidateText = response.candidates?.[0]?.content?.parts?.[0]?.text;
       if (candidateText) {
         const parsed = JSON.parse(candidateText);
-        return sanitizeInterpretedQuery(
+        const result = sanitizeInterpretedQuery(
           {
             ...parsed,
             referenceListingId: options.activeListingId,
           },
           "gemini"
         );
+        setCachedInterpretation(cacheKey, result);
+        return result;
       }
     } catch (err) {
       console.warn("[search:interpreter] Gemini also failed, falling back to deterministic parser:", extractErrorInfo(err).message);
@@ -388,5 +433,8 @@ Rules:
   }
 
   // 3. Fallback to deterministic parser
-  return interpretQueryDeterministic(text, options);
+  const fallbackResult = interpretQueryDeterministic(text, options);
+  setCachedInterpretation(cacheKey, fallbackResult);
+  return fallbackResult;
 }
+

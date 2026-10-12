@@ -23,12 +23,15 @@ export async function GET(
 
     const { id } = await context.params;
 
-    // ⭐ Increase views automatically
+    // ⭐ Increase views automatically with safe projection (exclude embedding)
     const ad = await Ad.findByIdAndUpdate(
       id,
       { $inc: { views: 1 } },
       { new: true }
-    ).populate("user", "name email");
+    )
+      .select("-embedding")
+      .populate("user", "name email")
+      .lean();
 
     if (!ad) {
       return NextResponse.json(
@@ -46,7 +49,7 @@ export async function GET(
     });
 
     const adWithFraud = {
-      ...ad.toObject(),
+      ...ad,
       fraudCheck: {
         score: fraudResult.score,
         status: fraudResult.status,
@@ -55,6 +58,7 @@ export async function GET(
     };
 
     return NextResponse.json(adWithFraud);
+
 
   } catch (error) {
 

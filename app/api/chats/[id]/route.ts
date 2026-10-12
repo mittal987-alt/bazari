@@ -19,12 +19,11 @@ export async function GET(
 
     const { id } = await params;
 
-    console.log("CHAT ID:", id); // 🔍 debug
-
     const chat = await Chat.findById(id)
       .populate("buyer", "name email")
       .populate("seller", "name email")
-      .populate("adId", "title price images");
+      .populate("adId", "title price images")
+      .lean();
 
     if (!chat)
       return NextResponse.json({ message: "Chat not found" }, { status: 404 });
@@ -38,12 +37,16 @@ export async function GET(
       return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
 
-    const messages = await Message.find({ chatId: id }).sort({ createdAt: 1 });
+    const messages = await Message.find({ chatId: id })
+      .sort({ createdAt: 1 })
+      .limit(100)
+      .lean();
 
     return NextResponse.json({
       chat,
       messages,
     });
+
 
   } catch (err) {
     console.error("GET CHAT ERROR:", err);

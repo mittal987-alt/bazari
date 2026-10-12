@@ -95,9 +95,11 @@ export async function GET(req: Request) {
       .populate("reviewerId", "name avatar")
       .populate("adId", "title price")
       .sort({ createdAt: -1 })
-      .limit(20);
+      .limit(20)
+      .lean();
 
     return NextResponse.json(reviews);
+
   } catch (error: any) {
     console.error("Fetch Reviews Error:", error);
     return NextResponse.json({ message: error.message || "Internal Server Error" }, { status: 500 });

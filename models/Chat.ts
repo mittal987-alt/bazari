@@ -26,4 +26,9 @@ const ChatSchema = new mongoose.Schema(
 { timestamps: true }
 );
 
+// High-frequency indexes: Chat lists retrieved per buyer/seller sorted by recency
+ChatSchema.index({ buyer: 1, updatedAt: -1 });
+ChatSchema.index({ seller: 1, updatedAt: -1 });
+ChatSchema.index({ adId: 1, buyer: 1 });
+
 export default mongoose.models.Chat || mongoose.model("Chat", ChatSchema);

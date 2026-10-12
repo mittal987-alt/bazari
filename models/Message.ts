@@ -21,4 +21,7 @@ const MessageSchema = new mongoose.Schema(
 { timestamps: true }
 );
 
+// High-frequency index: chat messages are always retrieved by chatId sorted by createdAt
+MessageSchema.index({ chatId: 1, createdAt: 1 });
+
 export default mongoose.models.Message || mongoose.model("Message", MessageSchema);

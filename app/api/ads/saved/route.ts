@@ -15,9 +15,15 @@ export async function GET() {
 
     const userId = user.id.toString();
 
-    const savedAds = await Ad.find({ savedBy: userId });
+    const savedAds = await Ad.find({ savedBy: userId })
+      .select("-embedding -savedBy -groupBuyers")
+      .populate("user", "name email isSellerVerified rating")
+      .sort({ createdAt: -1 })
+      .limit(100)
+      .lean();
 
     return NextResponse.json(savedAds);
+
 
   } catch (error) {
     console.error("GET SAVED ADS ERROR:", error);

@@ -135,4 +135,8 @@ AdSchema.index({ status: 1, category: 1, price: 1 });
 AdSchema.index({ status: 1, price: 1 });
 AdSchema.index({ status: 1, locationName: 1 });
 
+// 👤 User seller listings & saved wishlist lookups
+AdSchema.index({ user: 1, createdAt: -1 });
+AdSchema.index({ savedBy: 1 });
+
 export default mongoose.models.Ad || mongoose.model("Ad", AdSchema);

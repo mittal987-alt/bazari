@@ -217,8 +217,9 @@ export async function withRetry<T>(
       if (options.onRetry) {
         options.onRetry(attempt, delayMs, errorInfo);
       } else {
+        const statusStr = errorInfo.status ? `status ${errorInfo.status}` : "network/timeout";
         console.warn(
-          `[${options.providerName}] Transient error (status: ${errorInfo.status || "unknown"}), retry ${attempt}/${options.maxRetries} after ${Math.round(delayMs)}ms: ${errorInfo.message.slice(0, 120)}`
+          `[${options.providerName}] Transient error (${statusStr}), retry ${attempt}/${options.maxRetries} after ${Math.round(delayMs)}ms: ${errorInfo.message.slice(0, 120)}`
         );
       }
 
@@ -226,3 +227,4 @@ export async function withRetry<T>(
     }
   }
 }
+

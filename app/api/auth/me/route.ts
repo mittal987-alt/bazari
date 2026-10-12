@@ -25,23 +25,16 @@ export async function GET() {
         token,
         process.env.JWT_SECRET!
       );
-
-      console.log("JWT VERIFIED");
-      console.log("DECODED:", decoded);
-    } catch (err) {
-      console.log("JWT VERIFY FAILED:", err);
-
+    } catch {
       return NextResponse.json(
         { message: "Invalid token" },
         { status: 401 }
       );
     }
 
-    const user = await User.findById(decoded.id).select(
-      "_id name email role rating reviewCount isTrusted"
-    );
-
-    console.log("USER FOUND:", !!user);
+    const user = await User.findById(decoded.id)
+      .select("_id name email role rating reviewCount isTrusted")
+      .lean();
 
     if (!user) {
       return NextResponse.json(
@@ -59,6 +52,7 @@ export async function GET() {
       reviewCount: user.reviewCount,
       isTrusted: user.isTrusted,
     });
+
   } catch (error) {
     console.error("ME API ERROR:", error);
 

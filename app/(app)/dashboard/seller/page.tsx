@@ -58,9 +58,22 @@ export default function SellerDashboard() {
     fetchSellerData();
     socket.connect();
     socket.emit("register_user", userId);
-    socket.on("new_notification", fetchSellerData);
-    return () => { socket.off("new_notification", fetchSellerData); };
+
+    let debounceTimer: NodeJS.Timeout | null = null;
+    const handleNotification = () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        fetchSellerData();
+      }, 1000);
+    };
+
+    socket.on("new_notification", handleNotification);
+    return () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      socket.off("new_notification", handleNotification);
+    };
   }, [userId]);
+
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this listing?")) return;

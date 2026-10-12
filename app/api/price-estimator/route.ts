@@ -23,7 +23,9 @@ export async function GET(req: NextRequest) {
       status: "active"
     })
     .limit(4)
-    .select("title price images locationName");
+    .select("title price images locationName")
+    .lean();
+
 
     // 2. Fallback to benchmarks if search is too narrow
     const benchmark = findBenchmark(productName);

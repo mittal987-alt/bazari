@@ -21,9 +21,12 @@ export async function GET() {
       .populate("adId", "title images price")
       .populate("buyer", "name email")
       .populate("seller", "name email")
-      .sort({ updatedAt: -1 });
+      .sort({ updatedAt: -1 })
+      .limit(50)
+      .lean();
 
     return NextResponse.json(chats);
+
 
   } catch (error) {
     console.error("CHAT LIST ERROR:", error);

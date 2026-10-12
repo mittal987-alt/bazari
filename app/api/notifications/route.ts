@@ -24,17 +24,21 @@ export async function GET(req: NextRequest) {
       filter.isRead = false;
     }
 
-    const total = await Notification.countDocuments(filter);
-    const unreadCount = await Notification.countDocuments({
-      recipient: authUser.id,
-      isRead: false,
-    });
-
-    const notifications = await Notification.find(filter)
-      .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .lean();
+    // Parallelize count and query reads
+    const [total, unreadCount, notifications] = await Promise.all([
+      unreadOnly
+        ? Notification.countDocuments({ recipient: authUser.id, isRead: false })
+        : Notification.countDocuments({ recipient: authUser.id }),
+      Notification.countDocuments({
+        recipient: authUser.id,
+        isRead: false,
+      }),
+      Notification.find(filter)
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean(),
+    ]);
 
     return NextResponse.json({
       notifications,
@@ -43,6 +47,7 @@ export async function GET(req: NextRequest) {
       page,
       totalPages: Math.max(1, Math.ceil(total / limit)),
     });
+
   } catch (err) {
     console.error("[api:notifications] GET Error:", err);
     return NextResponse.json(

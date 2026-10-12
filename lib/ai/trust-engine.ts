@@ -478,3 +478,91 @@ export async function analyseListingRisk(input: TrustAnalysisInput): Promise<Tru
     analysedAt: new Date().toISOString(),
   };
 }
+
+/**
+ * Batched, deterministic risk analysis for multiple listings.
+ * Eliminates N+1 query patterns by fetching ads, sellers, and report counts in 3 bulk queries.
+ */
+export async function analyseListingRiskBatch(
+  listingIds: string[]
+): Promise<Record<string, TrustAnalysisResult>> {
+  await connectDB();
+  const validIds = listingIds.filter((id) => /^[a-f\d]{24}$/i.test(id));
+  if (validIds.length === 0) return {};
+
+  const oids = validIds.map((id) => new mongoose.Types.ObjectId(id));
+
+  // 1. Bulk fetch all ads
+  const ads = await Ad.find({ _id: { $in: oids } })
+    .select("title description price category images user status createdAt")
+    .lean();
+
+  const adMap = new Map<string, any>();
+  const sellerIds = new Set<string>();
+  for (const ad of ads) {
+    adMap.set(String(ad._id), ad);
+    if ((ad as any).user) sellerIds.add(String((ad as any).user));
+  }
+
+  // 2. Bulk fetch all relevant sellers
+  const sellerOids = Array.from(sellerIds).map((id) => new mongoose.Types.ObjectId(id));
+  const sellers = await User.find({ _id: { $in: sellerOids } })
+    .select("_id createdAt")
+    .lean();
+  const sellerMap = new Map<string, any>();
+  for (const s of sellers) {
+    sellerMap.set(String((s as any)._id), s);
+  }
+
+  // 3. Bulk aggregate report counts per listing
+  const reportCounts = await Report.aggregate([
+    { $match: { listingId: { $in: oids } } },
+    { $group: { _id: "$listingId", count: { $sum: 1 } } },
+  ]);
+  const reportCountMap = new Map<string, number>();
+  for (const rc of reportCounts) {
+    reportCountMap.set(String(rc._id), rc.count);
+  }
+
+  const results: Record<string, TrustAnalysisResult> = {};
+  for (const id of validIds) {
+    const ad = adMap.get(id);
+    if (!ad) continue;
+
+    const seller = (ad as any).user ? sellerMap.get(String((ad as any).user)) : null;
+    const sellerAccountAgeDays = seller?.createdAt
+      ? Math.floor((Date.now() - new Date(seller.createdAt).getTime()) / (1000 * 60 * 60 * 24))
+      : 999;
+    const reportCount = reportCountMap.get(id) || 0;
+
+    const ctx: DetectionContext = {
+      ad,
+      seller,
+      reportCount,
+      duplicateCount: 0,
+      sellerActiveListingCount: 1,
+      sellerAccountAgeDays,
+    };
+
+    const signals = buildDeterministicSignals(ctx);
+    const riskScore = computeRiskScore(signals);
+    const riskLevel = scoreToLevel(riskScore);
+    const { moderatorSummary, buyerNote } = buildDeterministicNarrative(signals, riskLevel, riskScore);
+
+    results[id] = {
+      riskScore,
+      riskLevel,
+      signals,
+      moderatorSummary,
+      buyerNote,
+      reportCount,
+      duplicateCount: 0,
+      aiEnhanced: false,
+      provider: "deterministic",
+      analysedAt: new Date().toISOString(),
+    };
+  }
+
+  return results;
+}
+

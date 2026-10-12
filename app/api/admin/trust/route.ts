@@ -2,9 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { getUserFromToken } from "@/lib/auth";
 import Report from "@/models/Report";
-import Ad from "@/models/Ad";
 import mongoose from "mongoose";
-import { analyseListingRisk } from "@/lib/ai/trust-engine";
+import { analyseListingRiskBatch } from "@/lib/ai/trust-engine";
 
 export const runtime = "nodejs";
 
@@ -50,7 +49,7 @@ export async function GET(req: NextRequest) {
       Report.countDocuments({ status }),
     ]);
 
-    // Attach lightweight risk data (deterministic only, no AI call) per unique listing
+    // Attach lightweight risk data in a single batch query (eliminates N+1 database queries)
     const uniqueListingIds = [
       ...new Set(
         reports
@@ -59,16 +58,8 @@ export async function GET(req: NextRequest) {
       ),
     ];
 
-    const riskMap: Record<string, any> = {};
-    await Promise.allSettled(
-      uniqueListingIds.map(async (id) => {
-        try {
-          riskMap[id] = await analyseListingRisk({ listingId: id, skipAI: true });
-        } catch {
-          riskMap[id] = null;
-        }
-      })
-    );
+    const riskMap = await analyseListingRiskBatch(uniqueListingIds);
+
 
     const enrichedReports = reports.map((r: any) => {
       const lid = String((r.listingId as any)?._id || r.listingId);

@@ -141,17 +141,22 @@ export async function GET(req: NextRequest) {
     if (sort === "newest")     sortQuery = { createdAt: -1 };
     if (sort === "trending")   sortQuery = { views: -1, chats: -1, createdAt: -1 };
 
-    const total = await Ad.countDocuments(filter);
-    const totalPages = Math.max(1, Math.ceil(total / limit));
+    const startTime = performance.now();
+    const correlationId = req.headers.get("x-request-id") || `search_${Date.now()}`;
 
-    // Fetch documents with safe projection (excluding heavy embeddings and internal fields)
-    const rawAds = await Ad.find(filter)
-      .select("-embedding -savedBy -groupBuyers")
-      .populate("user", "name email isSellerVerified rating reviewCount")
-      .sort(sortQuery)
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .lean();
+    // Execute count and paginated find concurrently to eliminate sequential network round-trips
+    const [total, rawAds] = await Promise.all([
+      Ad.countDocuments(filter),
+      Ad.find(filter)
+        .select("-embedding -savedBy -groupBuyers")
+        .populate("user", "name email isSellerVerified rating reviewCount")
+        .sort(sortQuery)
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean(),
+    ]);
+
+    const totalPages = Math.max(1, Math.ceil(total / limit));
 
     // Apply ranking and relevance scoring
     const ads = rankListings(rawAds, {
@@ -165,23 +170,33 @@ export async function GET(req: NextRequest) {
       sortBy: sort as any,
     });
 
-    return NextResponse.json({
-      ads,
-      total,
-      page,
-      totalPages,
-      interpretation,
-      appliedFilters: {
-        search: trimmedSearch,
-        category: category || undefined,
-        city: city || undefined,
-        min: parsedMin,
-        max: parsedMax,
-        condition: condition || undefined,
-        brand: brand || undefined,
-        sort,
+    const durationMs = Math.round((performance.now() - startTime) * 10) / 10;
+
+    return NextResponse.json(
+      {
+        ads,
+        total,
+        page,
+        totalPages,
+        interpretation,
+        appliedFilters: {
+          search: trimmedSearch,
+          category: category || undefined,
+          city: city || undefined,
+          min: parsedMin,
+          max: parsedMax,
+          condition: condition || undefined,
+          brand: brand || undefined,
+          sort,
+        },
       },
-    });
+      {
+        headers: {
+          "x-request-id": correlationId,
+          "Server-Timing": `db;dur=${durationMs}`,
+        },
+      }
+    );
 
   } catch (err) {
     console.error("ADS SEARCH ERROR:", err);
@@ -190,6 +205,7 @@ export async function GET(req: NextRequest) {
       { status: 500 }
     );
   }
+
 }
 
 

@@ -148,6 +148,22 @@ function AdsPageContent() {
     });
   }, []);
 
+  // Debounced filters to eliminate excessive network requests on every keystroke
+  const [debouncedSearch, setDebouncedSearch] = useState(search);
+  const [debouncedCity, setDebouncedCity] = useState(city);
+  const [debouncedMin, setDebouncedMin] = useState(min);
+  const [debouncedMax, setDebouncedMax] = useState(max);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+      setDebouncedCity(city);
+      setDebouncedMin(min);
+      setDebouncedMax(max);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [search, city, min, max]);
+
   const fetchAds = useCallback(async (pageNumber: number, reset = false) => {
     try {
       setLoading(true);
@@ -157,11 +173,11 @@ function AdsPageContent() {
         page: pageNumber,
         limit: 12,
       };
-      if (search.trim()) params.search = search.trim();
+      if (debouncedSearch.trim()) params.search = debouncedSearch.trim();
       if (category && category !== "All") params.category = category;
-      if (city.trim()) params.city = city.trim();
-      if (min.trim()) params.min = min.trim();
-      if (max.trim()) params.max = max.trim();
+      if (debouncedCity.trim()) params.city = debouncedCity.trim();
+      if (debouncedMin.trim()) params.min = debouncedMin.trim();
+      if (debouncedMax.trim()) params.max = debouncedMax.trim();
       if (sort) params.sort = sort;
       if (condition.trim()) params.condition = condition.trim();
 
@@ -180,26 +196,32 @@ function AdsPageContent() {
         });
       }
 
-      if (search.trim()) {
-        saveRecentSearch(search.trim());
+      if (debouncedSearch.trim()) {
+        saveRecentSearch(debouncedSearch.trim());
       }
 
-      syncUrlParams(search, category, city, min, max, sort, condition);
+      syncUrlParams(debouncedSearch, category, debouncedCity, debouncedMin, debouncedMax, sort, condition);
     } catch (err: any) {
       console.error("[AdsPage] Fetch error:", err);
       setFetchError("Unable to load listings. Please check your connection or retry.");
     } finally {
       setLoading(false);
     }
-  }, [search, category, city, min, max, sort, condition, saveRecentSearch, syncUrlParams]);
+  }, [debouncedSearch, category, debouncedCity, debouncedMin, debouncedMax, sort, condition, saveRecentSearch, syncUrlParams]);
 
+  // When filters change, reset to page 1 and reload listings
   useEffect(() => {
+    setPage(1);
     fetchAds(1, true);
   }, [fetchAds]);
 
+  // When scrolling to load more pages, fetch next page append-only
   useEffect(() => {
-    if (page > 1) fetchAds(page);
-  }, [page, fetchAds]);
+    if (page > 1) {
+      fetchAds(page, false);
+    }
+  }, [page]);
+
 
   // Infinite Scroll Observer
   useEffect(() => {

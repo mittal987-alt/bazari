@@ -649,7 +649,10 @@ async function _executeAgent(request: AgentRequest): Promise<AgentResponse> {
 
   try {
     finalText = await withRetry(
-      () => runMistralProvider(request, accumulated),
+      () => {
+        accumulated = { products: [] };
+        return runMistralProvider(request, accumulated);
+      },
       {
         providerName: "Mistral",
         maxRetries: 2,
@@ -674,7 +677,10 @@ async function _executeAgent(request: AgentRequest): Promise<AgentResponse> {
 
     try {
       finalText = await withRetry(
-        () => runGeminiProvider(request, accumulated),
+        () => {
+          accumulated = { products: [] };
+          return runGeminiProvider(request, accumulated);
+        },
         {
           providerName: "Gemini",
           maxRetries: 2,
@@ -683,6 +689,7 @@ async function _executeAgent(request: AgentRequest): Promise<AgentResponse> {
         }
       );
       activeProvider = "gemini";
+
     } catch (geminiErr) {
       const geminiInfo = extractErrorInfo(geminiErr);
       const mistralInfo = extractErrorInfo(mistralError);
