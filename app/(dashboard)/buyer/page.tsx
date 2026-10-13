@@ -7,6 +7,8 @@ export default function BuyerDashboardRedirect() {
   const router = useRouter();
 
   useEffect(() => {
+
+    
     router.replace("/dashboard/buyer");
   }, [router]);
 
